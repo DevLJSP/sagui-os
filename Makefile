@@ -87,7 +87,7 @@ PROGRAMAS += $(B)/userland/bin/mp3info
 # O Sagui Code (fase 8).
 SAGUICODE_OBJ := $(patsubst userland/saguicode/%.c,$(B)/userland/saguicode/%.o,$(wildcard userland/saguicode/*.c))
 PROGRAMAS += $(B)/userland/bin/saguicode
-# O Tocador de músicas (pedido do Eli): a janela e, quando chegar, o decodificador de MP3.
+# O Tocador de músicas (H87): a janela e, quando chegar, o decodificador de MP3.
 TOCADOR_OBJ := $(B)/userland/tocador/tocador.o $(B)/userland/tocador/mp3.o
 PROGRAMAS += $(B)/userland/bin/tocador
 # O compilador C do SaguiOS (fase 7 da versão 2.0): o comando cc, a libsagui

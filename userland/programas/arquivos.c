@@ -44,7 +44,7 @@ static const char *const ic_programa[] = {
     ".PPPPPPPPPPPPPP.", "................", "................", "................",
 };
 
-/* Ícones por tipo de arquivo (pedido do Eli: o .wav aparecia como texto). */
+/* Ícones por tipo de arquivo (antes, um .wav aparecia com o ícone de texto). */
 static const char *const ic_musica[] = {          /* uma nota musical */
     "..PPPPPPPPPPPP..", "..PBBBBBBBBBBP..", "..PBBBBBNNNBBP..", "..PBBBBBNBNNBP..",
     "..PBBBBBNBBNBP..", "..PBBBBBNBBBBP..", "..PBBBBBNBBBBP..", "..PBBBBBNBBBBP..",

@@ -357,8 +357,8 @@ static void desenhar_menu(void)
     if (!menu_aberto) return;
     int a = QTD_MENU * MENU_ITEM + 8;
     vidro_sombra(&tela, MENU_X, MENU_Y, MENU_L, a);
-    /* O menu tem texto pequeno em cima do vidro: quase opaco (o Eli achou
-     * transparente demais no G470), só um toque do fundo. */
+    /* O menu tem texto pequeno em cima do vidro: quase opaco (transparente
+     * demais, ficava difícil de ler no G470), só um toque do fundo. */
     vidro_pintar(&tela, MENU_X, MENU_Y, MENU_L, a, tema->topo, 238, CANTOS_EM_CIMA | CANTOS_EMBAIXO);
     for (int i = 0; i < QTD_MENU; i++) {
         int y = MENU_Y + 4 + i * MENU_ITEM;
