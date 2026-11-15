@@ -663,16 +663,20 @@ static bool um_passo(agente_t *ag)
 bool agente_passo(agente_t *ag)
 {
     if (!ag->ocupado) return false;
-    bool continuar = um_passo(ag);
-    ag->passo++;
-    if (continuar && ag->passo >= ag->max_passos) {
-        aviso(ag, AV_LIMITE_PASSOS, "Limite de %d passos neste pedido. Diga \"continue\" para seguir.", ag->max_passos);
-        continuar = false;
-    }
-    if (continuar && ag->parar) {
+    bool continuar;
+    /* O pedido de parar chega entre um passo e outro (a janela trata os
+     * eventos depois de cada passo): confere antes de chamar o modelo de novo. */
+    if (ag->parar) {
         aviso(ag, AV_PARADO, "Parado a pedido. Diga \"continue\" para seguir.");
         registrar("saguicode: parado a pedido no passo %d", ag->passo);
         continuar = false;
+    } else {
+        continuar = um_passo(ag);
+        ag->passo++;
+        if (continuar && ag->passo >= ag->max_passos) {
+            aviso(ag, AV_LIMITE_PASSOS, "Limite de %d passos neste pedido. Diga \"continue\" para seguir.", ag->max_passos);
+            continuar = false;
+        }
     }
     if (!continuar) terminar_pedido(ag);
     return continuar;
