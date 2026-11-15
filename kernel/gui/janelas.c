@@ -336,7 +336,8 @@ static const fixo_t menu_itens[] = {
     { "Arquivos", "/bin/arquivos", "", 0 }, { "Terminal", "/bin/terminal", "", 0 },
     { "Cipó", "/bin/navegador", "", 0 }, { "Editor", "/bin/editor", "", 0 },
     { "Calculadora", "/bin/calculadora", "", 0 }, { "Banana", "/bin/banana", "", 0 },
-    { "Sagui 3D", "/bin/sagui3d", "", 0 }, { "Tocador", "/bin/tocador", "", 0 }, { "Configurações", "/bin/configuracoes", "", 0 },
+    { "Sagui 3D", "/bin/sagui3d", "", 0 }, { "Tocador", "/bin/tocador", "", 0 },
+    { "Sagui Code (IA)", "/bin/terminal -e /bin/saguicode", "", 0 }, { "Configurações", "/bin/configuracoes", "", 0 },
     { "Sobre o SaguiOS", "/bin/sobre-o-sistema", "", 0 }, { "Desligar...", "/bin/energia", "", 0 },
 };
 #define QTD_MENU (int)(sizeof menu_itens / sizeof menu_itens[0])
@@ -357,8 +358,8 @@ static void desenhar_menu(void)
     if (!menu_aberto) return;
     int a = QTD_MENU * MENU_ITEM + 8;
     vidro_sombra(&tela, MENU_X, MENU_Y, MENU_L, a);
-    /* O menu tem texto pequeno em cima do vidro: quase opaco (o Eli achou
-     * transparente demais no G470), só um toque do fundo. */
+    /* O menu tem texto pequeno em cima do vidro: quase opaco (transparente
+     * demais, ficava difícil de ler no G470), só um toque do fundo. */
     vidro_pintar(&tela, MENU_X, MENU_Y, MENU_L, a, tema->topo, 238, CANTOS_EM_CIMA | CANTOS_EMBAIXO);
     for (int i = 0; i < QTD_MENU; i++) {
         int y = MENU_Y + 4 + i * MENU_ITEM;
@@ -465,12 +466,25 @@ static void desenhar_ctx(void)
     }
 }
 
+/* Abre um programa; "caminho" pode trazer argumentos separados por espaço
+ * (o Sagui Code abre como "/bin/terminal -e /bin/saguicode"). */
 static void abrir_programa(const char *caminho)
 {
-    const char *nome = caminho;
-    for (const char *p = caminho; *p; p++) if (*p == '/') nome = p + 1;
-    char *argv[] = { (char *)nome, NULL };
-    int pid = processo_executar(caminho, 1, argv, NULL);
+    static char linha[128];
+    char *argv[6];
+    int argc = 0;
+    txt_copia_n(linha, caminho, sizeof linha);
+    for (char *p = linha; *p && argc < 5;) {
+        while (*p == ' ') *p++ = 0;
+        if (!*p) break;
+        argv[argc++] = p;
+        while (*p && *p != ' ') p++;
+    }
+    if (!argc) return;
+    argv[argc] = NULL;
+    const char *prog = argv[0];
+    for (const char *p = prog; *p; p++) if (*p == '/') argv[0] = (char *)p + 1;
+    int pid = processo_executar(prog, argc, argv, NULL);
     klog("[GUI] abrir %s (pid %d)\n", caminho, pid);
 }
 
