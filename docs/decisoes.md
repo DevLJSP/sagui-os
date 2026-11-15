@@ -1545,3 +1545,17 @@ e dá para explicar etapa por etapa; não havia motivo para a exceção.
   do fim (a informação "gapless" do quadro LAME). Os blocos mistos estão
   escritos pela norma, mas nenhum codificador à mão os gera: não foram
   testados.
+
+## D049. Todo o userland realinha a pilha para o SSE2 (H63, pull request #10)
+
+O D042 fez os programas usarem SSE2, e o D043 já tinha corrigido a pilha
+inicial e as pilhas trocadas do Cipó e do tocador. Faltava o outro lado: a
+`libsagui`, onde ficam o TLS e o x25519, continuava compilada sem
+`-mstackrealign`. Na segunda conexão HTTPS, feita com a pilha trocada à mão
+pelo motor, o `x25519` recebia uma pilha alinhada só em 8 bytes e o `movdqa`
+que guarda um vetor de 16 bytes dava proteção geral.
+
+Agora o `UCFLAGS` leva `-mstackrealign` para todo o userland. Cada função
+alinha a própria pilha ao entrar, então qualquer pilha trocada à mão (motor,
+JavaScript, compilador ou um programa futuro) é segura, e o Cipó e o tocador
+não precisam mais do flag separado. O kernel continua sem SSE e sem esse custo.
