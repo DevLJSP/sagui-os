@@ -75,6 +75,10 @@ PROGRAMAS += $(B)/userland/bin/navegador $(B)/userland/bin/cipo
 # O tocador de vídeo (H82): MP4 com H.264 e AAC, do pull request #6.
 VIDEO_OBJ := $(patsubst %.c,$(B)/nav/%.o,$(wildcard userland/video/*.c))
 PROGRAMAS += $(B)/userland/bin/video
+# O decodificador de MP3 do Tocador (H86), escrito do zero (D047), e o
+# mp3info, o comando que o testa. (A janela do Tocador usa o mesmo mp3.o.)
+MP3INFO_OBJ := $(B)/userland/tocador/mp3info.o $(B)/userland/tocador/mp3.o
+PROGRAMAS += $(B)/userland/bin/mp3info
 # O Sagui Code (fase 8).
 SAGUICODE_OBJ := $(patsubst userland/saguicode/%.c,$(B)/userland/saguicode/%.o,$(wildcard userland/saguicode/*.c))
 PROGRAMAS += $(B)/userland/bin/saguicode
@@ -191,6 +195,17 @@ $(B)/userland/bin/video: $(VIDEO_OBJ) $(LIBSAGUI_OBJ) userland/programa.ld
 # /bin/cipo é o mesmo programa com o nome novo (H82).
 $(B)/userland/bin/cipo: $(B)/userland/bin/navegador
 	cp $< $@
+
+# -mstackrealign: o MP3 faz contas em float com SSE2, e o gcc pode guardar
+# valores alinhados em 16 bytes na pilha (como no navegador).
+$(B)/userland/tocador/%.o: userland/tocador/%.c $(wildcard userland/tocador/*.h) $(USER_HDR)
+	@mkdir -p $(dir $@)
+	$(CC) $(UCFLAGS) -mstackrealign -c -o $@ $<
+
+$(B)/userland/bin/mp3info: $(MP3INFO_OBJ) $(LIBSAGUI_OBJ) userland/programa.ld
+	@mkdir -p $(dir $@)
+	$(LD) $(ULDFLAGS) -o $@.elf $(MP3INFO_OBJ) $(LIBSAGUI_OBJ)
+	objcopy --strip-all $@.elf $@
 
 $(B)/userland/saguicode/%.o: userland/saguicode/%.c userland/saguicode/ia.h $(USER_HDR)
 	@mkdir -p $(dir $@)
