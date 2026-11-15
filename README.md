@@ -95,7 +95,7 @@ coluna com uma "fresta" que estreita a cada passagem, perspectiva sem olho de pe
 arquivos de texto, com texturas e personagens desenhados no próprio código. Explicação completa
 na seção "Sagui 3D" de [`docs/decisoes.md`](docs/decisoes.md).
 
-## Números
+## Números (da versão 1.0)
 
 | | |
 | --- | --- |
