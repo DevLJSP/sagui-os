@@ -84,8 +84,10 @@ PROGRAMAS += $(B)/userland/bin/video
 # mp3info, o comando que o testa. (A janela do Tocador usa o mesmo mp3.o.)
 MP3INFO_OBJ := $(B)/userland/tocador/mp3info.o $(B)/userland/tocador/mp3.o
 PROGRAMAS += $(B)/userland/bin/mp3info
-# O Sagui Code (fase 8).
-SAGUICODE_OBJ := $(patsubst userland/saguicode/%.c,$(B)/userland/saguicode/%.o,$(wildcard userland/saguicode/*.c))
+# O Sagui Code (fase 8): o núcleo do agente (ia.c e agente.c) e a
+# interface do Terminal (saguicode).
+SAGUICODE_NUCLEO := $(B)/userland/saguicode/ia.o $(B)/userland/saguicode/agente.o
+SAGUICODE_OBJ := $(SAGUICODE_NUCLEO) $(B)/userland/saguicode/saguicode.o
 PROGRAMAS += $(B)/userland/bin/saguicode
 # O Tocador de músicas (H87): a janela e, quando chegar, o decodificador de MP3.
 TOCADOR_OBJ := $(B)/userland/tocador/tocador.o $(B)/userland/tocador/mp3.o
@@ -218,7 +220,7 @@ $(B)/userland/bin/mp3info: $(MP3INFO_OBJ) $(LIBSAGUI_OBJ) userland/programa.ld
 	$(LD) $(ULDFLAGS) -o $@.elf $(MP3INFO_OBJ) $(LIBSAGUI_OBJ)
 	objcopy --strip-all $@.elf $@
 
-$(B)/userland/saguicode/%.o: userland/saguicode/%.c userland/saguicode/ia.h $(USER_HDR)
+$(B)/userland/saguicode/%.o: userland/saguicode/%.c userland/saguicode/ia.h userland/saguicode/agente.h $(USER_HDR)
 	@mkdir -p $(dir $@)
 	$(CC) $(UCFLAGS) -c -o $@ $<
 
