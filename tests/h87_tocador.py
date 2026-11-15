@@ -33,7 +33,9 @@ def main():
     wav = os.path.join(SAIDA, "h87.wav")
     pen = criar_pendrive("h87-pen", rotulo="DADOS", pastas=("musicas",),
                          arquivos={"musicas/a-la440.wav": wav_teste(440, 22050, 2.0),
-                                   "musicas/b-mi660.wav": wav_teste(660, 44100, 2.0)})
+                                   "musicas/b-mi660.wav": wav_teste(660, 44100, 2.0),
+                                   "musicas/c-seno440.mp3": open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                                              "recursos", "h86_seno440.mp3"), "rb").read()})
     with Maquina("h87", "ide", memoria="768M", extras=som_qemu(wav) + ["-device", "usb-ehci,id=ehci"] + pendrive_qemu(pen)) as m:
         m.esperar_serial("sagui:/$", 120)
         time.sleep(1)
@@ -54,14 +56,17 @@ def main():
         m.clique(xi, yi, duplo=True)
         s = esperar(m, "abrindo /usb/musicas/a-la440.wav com /bin/tocador", 15, antes)
         verificar(True, "dois cliques num .wav abrem o Tocador (pela extensão)")
-        s = esperar(m, "tocador: pronto (2 m", 20, antes)
-        verificar(True, "o Tocador lista as 2 músicas da pasta")
+        s = esperar(m, "tocador: pronto (3 m", 20, antes)
+        verificar(True, "o Tocador lista as 3 músicas da pasta (2 WAV e 1 MP3)")
         time.sleep(1.5)
         m.captura("H87-2-tocador")
         s = esperar(m, "tocador: fim de a-la440.wav", 20, antes)
         esperar(m, "tocador: /usb/musicas/b-mi660.wav (44100 Hz", 10, antes)
         verificar(True, "no fim da primeira, toca a segunda")
         esperar(m, "tocador: fim de b-mi660.wav", 20, antes)
+        esperar(m, "tocador: /usb/musicas/c-seno440.mp3 (44100 Hz", 10, antes)
+        esperar(m, "tocador: fim de c-seno440.mp3", 20, antes)
+        verificar(True, "o MP3 (decodificador do zero) tocou até o fim")
         # Pausar: Espaço com a janela em foco; depois Espaço de novo.
         t = janela(m.serial(), "Tocador")
         antes = len(m.serial())
