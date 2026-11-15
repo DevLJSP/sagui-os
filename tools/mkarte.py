@@ -269,9 +269,29 @@ def tocador(t):
     t.poligono([(33.5, 16), (44, 20), (44, 27), (33.5, 23)], 0xFFDF4A)   # bandeirola
 
 
+def saguicode(t):
+    """O Sagui Code: a cara do sagui (tufos brancos) sobre uma tela escura,
+    com os sinais de código "</>" embaixo."""
+    t.ret(5, 6, 59, 58, 8, vertical(0x34404C, 0x1C232B, 6, 58))
+    t.disco(19, 21, 7.5, 0xF5F5F0)                       # tufos das orelhas
+    t.disco(45, 21, 7.5, 0xF5F5F0)
+    t.disco(32, 24, 13, vertical(0x5A4433, 0x3A2B20, 11, 37))
+    t.disco(32, 12.5, 4, 0xF5F5F0, ry=3)                 # a mancha branca da testa
+    t.disco(32, 27, 8.5, vertical(0xC99A82, 0xA67660, 19, 35), ry=8)
+    t.disco(28.5, 25.5, 2.4, 0x17120F)
+    t.disco(35.5, 25.5, 2.4, 0x17120F)
+    t.disco(29.2, 24.8, 0.8, 0xFFFFFF)
+    t.disco(36.2, 24.8, 0.8, 0xFFFFFF)
+    t.disco(32, 30.5, 1.4, 0x3C2D23, ry=1)
+    t.traco([(22, 43), (15, 48.5), (22, 54)], 3.4, 0x42E584)   # <
+    t.traco([(35.5, 41.5), (28.5, 55.5)], 3.4, 0xFFDF4A)       # /
+    t.traco([(42, 43), (49, 48.5), (42, 54)], 3.4, 0x42E584)   # >
+
+
 ICONES = [("arquivos", arquivos), ("terminal", terminal), ("editor", editor), ("calculadora", calculadora),
           ("banana", banana), ("sagui3d", sagui3d), ("sobre", sobre), ("pendrive", pendrive),
-          ("configuracoes", configuracoes), ("cipo", cipo), ("instalado", instalado), ("tocador", tocador)]
+          ("configuracoes", configuracoes), ("cipo", cipo), ("instalado", instalado), ("tocador", tocador),
+          ("saguicode", saguicode)]
 TAMANHOS = [(64, ""), (40, "_40")]
 
 

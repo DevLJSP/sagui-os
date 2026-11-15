@@ -84,9 +84,12 @@ PROGRAMAS += $(B)/userland/bin/video
 # mp3info, o comando que o testa. (A janela do Tocador usa o mesmo mp3.o.)
 MP3INFO_OBJ := $(B)/userland/tocador/mp3info.o $(B)/userland/tocador/mp3.o
 PROGRAMAS += $(B)/userland/bin/mp3info
-# O Sagui Code (fase 8).
-SAGUICODE_OBJ := $(patsubst userland/saguicode/%.c,$(B)/userland/saguicode/%.o,$(wildcard userland/saguicode/*.c))
-PROGRAMAS += $(B)/userland/bin/saguicode
+# O Sagui Code (fase 8): o núcleo do agente (ia.c e agente.c) com duas
+# interfaces, o Terminal (saguicode) e a janela (saguicode-janela, H89).
+SAGUICODE_NUCLEO := $(B)/userland/saguicode/ia.o $(B)/userland/saguicode/agente.o
+SAGUICODE_OBJ := $(SAGUICODE_NUCLEO) $(B)/userland/saguicode/saguicode.o
+SAGUICODE_JANELA_OBJ := $(SAGUICODE_NUCLEO) $(B)/userland/saguicode/janela.o
+PROGRAMAS += $(B)/userland/bin/saguicode $(B)/userland/bin/saguicode-janela
 # O Tocador de músicas (H87): a janela e, quando chegar, o decodificador de MP3.
 TOCADOR_OBJ := $(B)/userland/tocador/tocador.o $(B)/userland/tocador/mp3.o
 PROGRAMAS += $(B)/userland/bin/tocador
@@ -218,13 +221,18 @@ $(B)/userland/bin/mp3info: $(MP3INFO_OBJ) $(LIBSAGUI_OBJ) userland/programa.ld
 	$(LD) $(ULDFLAGS) -o $@.elf $(MP3INFO_OBJ) $(LIBSAGUI_OBJ)
 	objcopy --strip-all $@.elf $@
 
-$(B)/userland/saguicode/%.o: userland/saguicode/%.c userland/saguicode/ia.h $(USER_HDR)
+$(B)/userland/saguicode/%.o: userland/saguicode/%.c userland/saguicode/ia.h userland/saguicode/agente.h $(USER_HDR)
 	@mkdir -p $(dir $@)
 	$(CC) $(UCFLAGS) -c -o $@ $<
 
 $(B)/userland/bin/saguicode: $(SAGUICODE_OBJ) $(LIBSAGUI_OBJ) userland/programa.ld
 	@mkdir -p $(dir $@)
 	$(LD) $(ULDFLAGS) -o $@.elf $(SAGUICODE_OBJ) $(LIBSAGUI_OBJ)
+	objcopy --strip-all $@.elf $@
+
+$(B)/userland/bin/saguicode-janela: $(SAGUICODE_JANELA_OBJ) $(LIBSAGUI_OBJ) userland/programa.ld
+	@mkdir -p $(dir $@)
+	$(LD) $(ULDFLAGS) -o $@.elf $(SAGUICODE_JANELA_OBJ) $(LIBSAGUI_OBJ)
 	objcopy --strip-all $@.elf $@
 
 # -Os: o cc vai dentro da imagem, e o tamanho pesa mais que a velocidade.

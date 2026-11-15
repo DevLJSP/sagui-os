@@ -1640,3 +1640,30 @@ Agora o `UCFLAGS` leva `-mstackrealign` para todo o userland. Cada função
 alinha a própria pilha ao entrar, então qualquer pilha trocada à mão (motor,
 JavaScript, compilador ou um programa futuro) é segura, e o Cipó e o tocador
 não precisam mais do flag separado. O kernel continua sem SSE e sem esse custo.
+
+## D050. Sagui Code: um núcleo do agente e duas interfaces (H89)
+
+O Sagui Code nasceu no Terminal, com o laço do agente misturado com a leitura
+do teclado e as cores. Para ganhar uma janela sem duplicar a lógica, o laço
+foi separado em `userland/saguicode/agente.c`: a conversa, as ferramentas, o
+resumo do contexto, a conta do gasto e o formato das conversas guardadas.
+O núcleo não escreve na tela; ele chama funções de uma estrutura
+(`agente_ui_t`): pedaço de texto, "pensando", ferramenta começou/acabou,
+aviso, pedido de licença e fim do pedido. O `saguicode` (Terminal) e o
+`saguicode-janela` são só interfaces sobre ele; o Terminal escreve
+exatamente o que escrevia antes.
+
+O laço anda um passo por vez (`agente_passo`: uma chamada ao modelo e as
+ferramentas pedidas). A janela trata os eventos entre um passo e outro, então
+não congela, e o botão Parar faz o pedido terminar antes do próximo passo. A
+chamada HTTP em si continua esperando a resposta (o texto vai aparecendo);
+uma tarefa separada para ela seria mais complexa do que vale agora.
+
+As sessões da janela ficam no pendrive de dados, em
+`/usb/.saguios/saguicode/sessoes/NNNN.json`, no mesmo formato do `/salvar` do
+Terminal, com dois campos a mais: `titulo` (o primeiro, para a lista ler só o
+começo do arquivo) e `gasto_micro` (o gasto da conversa). A sessão é guardada
+ao fim de cada pedido. Sem pendrive, as sessões ficam na memória enquanto a
+janela estiver aberta, e a janela avisa. O gasto total de todas as conversas
+fica nas configurações (`saguicode.gasto_total`, em milionésimos de dólar).
+A chave continua só em `chaves.txt`.
