@@ -65,6 +65,24 @@ request como está, a ideia é trazida para o código atual com o seu nome como
 coautor (`Co-authored-by`), o que aparece no seu perfil do GitHub como
 contribuição.
 
+### Revisão de segurança
+
+Antes de qualquer outra coisa, todo pull request passa por uma revisão de
+segurança:
+
+- **workflows do GitHub Actions** (`.github/`): só permissão de leitura, nenhum
+  `pull_request_target`, nenhum segredo, só ações oficiais, nada de baixar e
+  rodar scripts da internet;
+- **o que roda no build e nos testes** (Makefile, `tools/`, `tests/`): nada de
+  rede inesperada, comandos estranhos ou arquivos escritos fora do projeto;
+- **nada de binários prontos** nem arquivos opacos sem explicação;
+- **o núcleo** não pode gravar em discos sem a confirmação de quem usa, nem
+  afrouxar a proteção da memória dos programas;
+- **nenhum segredo ou dado pessoal**, e licenças em ordem (`terceiros/`).
+
+Os workflows de quem contribui pela primeira vez só rodam depois da aprovação
+do mantenedor.
+
 ## 5. Ideias e problemas
 
 Não quer programar? **Issues** com ideias, relatos de erro (com foto da tela ou
