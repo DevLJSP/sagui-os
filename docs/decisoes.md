@@ -1545,3 +1545,82 @@ e dá para explicar etapa por etapa; não havia motivo para a exceção.
   do fim (a informação "gapless" do quadro LAME). Os blocos mistos estão
   escritos pela norma, mas nenhum codificador à mão os gera: não foram
   testados.
+
+## D048. H.264 High no tocador de vídeo, pela norma (H88)
+
+**Contexto.** O `/bin/video` (do pull request #6, D043) decodificava H.264
+Baseline e Main. Os vídeos que o Eli testou (`sample-5s-360p.mp4`, o de 720p
+e o de 1080p) são do perfil **High** (profile_idc 100, nível 4.0, CABAC,
+quadros B), que é o que quase todo MP4 de hoje usa, e o tocador respondia
+"H.264 recusado (-2)".
+
+**Decisão: o High entra, escrito aqui a partir da norma.** O que o High
+acrescenta ao Main foi escrito em `userland/video/h264.c` lendo a
+Recomendação ITU-T H.264 (que a ITU publica de graça), sem consultar nem
+reproduzir nenhum decodificador existente; cada parte nova tem no comentário
+o item da norma de onde saiu:
+
+- o `transform_size_8x8_flag` de cada macrobloco e as condições para ele
+  existir (7.3.5), no CABAC (contextos 399 a 401, 9.3.3.1.1.10) e no CAVLC;
+- a **predição intra 8x8** (8.3.2), com o filtro das amostras vizinhas;
+- a **transformada inversa 8x8** (8.5.13) e a desquantização com
+  LevelScale8x8 (8.5.9);
+- as **matrizes de escala** do SPS e do PPS (7.3.2.1.1.1, tabela 7-2, regras
+  A e B), que valem também para os blocos 4x4; sem matriz, a conta é
+  exatamente a de antes;
+- os coeficientes dos blocos 8x8 no CABAC (ctxBlockCat 5, tabela 9-43) e no
+  CAVLC (quatro blocos 4x4 entrelaçados);
+- o filtro de desbloqueio, que não alisa as bordas que caem no meio de um
+  bloco 8x8 (8.7);
+- o `second_chroma_qp_index_offset` (o Cr pode ter QP diferente do Cb).
+
+Só progressivo, 4:2:0 e 8 bits. O que não entra é recusado com o motivo no
+diário ("video entrelacado", "mais de 8 bits por amostra", "croma que nao e
+4:2:0", "modo sem perdas"...): `h264_motivo`.
+
+**Os dados da norma** que isso pede estão em `userland/video/h264_alto_tab.h`,
+com o número da tabela de cada um: os contextos do CABAC para blocos 8x8
+(9-43), o normAdjust8x8 (equação 8-316) e as listas de escala padrão (7-3 e
+7-4). O ziguezague 8x8 é calculado. Os valores iniciais dos contextos novos do
+CABAC já estavam nas tabelas de `terceiros/ffmpeg-h264-tabelas` (D043), que
+continuam lá, separadas.
+
+**Como se sabe que está certo, e o que não se sabe.** Não há decodificador de
+referência no PC de build (nem ffmpeg, nem libavcodec), então a imagem **não
+foi comparada amostra por amostra** com a de outro decodificador. O que
+`tests/h88_video_alto.py` confere:
+
+- peças isoladas, por contas que não dependem de vídeo (`video_pc
+  --conferir`): as 64 funções de base da transformada 8x8 são ortogonais; o
+  normAdjust8x8 compensa o tamanho de cada uma (até 5%); a desquantização nova
+  com matriz plana é igual à antiga; as listas de escala seguem as regras A e
+  B; a predição intra 8x8 filtra as vizinhas e continua rampas;
+- nos três vídeos: saem os 171 quadros, nenhuma fatia dá erro, e as 513
+  fatias CABAC terminam exatamente no fim dos seus dados (um símbolo lido
+  errado, por exemplo um contexto trocado na tabela 9-43, desalinharia o
+  resto da fatia). Os vídeos usam de fato o High: no de 1080p, 8.749 MBs
+  intra 8x8 (os 9 modos) e 188.891 MBs inter com a transformada 8x8;
+- as imagens foram olhadas (quadros 0, 60, 100, 149 e 170): limpas, sem
+  blocos, inclusive no último quadro, 170 quadros depois do único quadro I
+  (um erro de reconstrução se acumularia até lá); a medida de "blocos à
+  mostra" do teste fica entre 1,0 e 1,3;
+- no SaguiOS (QEMU), `video /usb/v.mp4` decodifica os 171 quadros do vídeo de
+  360p sem erro, e a captura `H88-1-video` bate com o quadro decodificado no
+  PC (diferença média de 0,8 em 255).
+
+**Não testado:** matrizes de escala num vídeo de verdade (os três não as
+usam; só a leitura e as regras foram conferidas), o High com CAVLC (os três
+são CABAC; e o CAVLC do tocador continua sem quadros B) e a regressão do
+Baseline e do Main num vídeo (o `h82_video.py` precisa do ffmpeg, que este PC
+não tem; a desquantização foi conferida por conta). Os vídeos do Eli não
+estão no repositório: sem eles o teste só roda as conferências, e avisa.
+
+**Velocidade.** O decodificador é simples (uma amostra por vez, sem SIMD).
+Compilado em 32 bits no PC de build (EPYC 9354P): 360p a cerca de 150
+quadros/s, 720p a 37 e 1080p a 18; no QEMU emulado (sem KVM), 360p entre 15 e
+20 quadros/s. O G470 (Sandy Bridge, bem mais lento que esse PC) deve tocar
+360p com folga, e 720p e 1080p abaixo dos 30 quadros/s do vídeo (o tocador
+decodifica todos os quadros e pula os atrasados na tela): não foi medido lá. Mais da
+metade do tempo é a compensação de movimento; fica para uma história de
+desempenho. Junto veio uma economia barata: o MB com um vetor só é previsto de
+uma vez (16x16) em vez de em quatro blocos 8x8, com a mesma imagem.
