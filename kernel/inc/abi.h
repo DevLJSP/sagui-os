@@ -75,6 +75,7 @@
 #define SIS_ALEATORIO      75   /* (&destino, n) -> n bytes aleatórios (H50) */
 #define SIS_REDE_ESTADO    74   /* (socket TCP) -> 0 conectando, 1 aberta, 2 o outro lado terminou; <0 falhou (H48) */
 #define SIS_JANELA_OPCOES  76   /* (id, opções, larg_min | alt_min << 16) -> 0 (H78) */
+#define SIS_AREA_COPIA     78   /* (0, &texto, n) copia; (1, &buffer, max) cola -> tamanho guardado */
 #define SIS_MENU_JANELA    77   /* (id, x | y << 16, "Item|Item|Item") -> abre um menu na janela; a escolha chega em EV_MENU (H81) */
 #define SIS_MAX            128   /* espaço para as chamadas da versão 2.0 */
 

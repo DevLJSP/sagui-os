@@ -99,7 +99,10 @@ int  atualizar_janela(int id, const retangulo_t *r);   /* r = NULL: a janela tod
 int  proximo_evento(int id, evento_t *e, bool esperar); /* 1 = veio um evento */
 int  titulo_janela(int id, const char *titulo);
 int  janela_opcoes(int id, int opcoes, int larg_min, int alt_min);   /* JAN_REDIMENSIONAVEL (H78) */
-int  menu_janela(int id, int x, int y, const char *itens);           /* "A|B|C"; escolha em EV_MENU (H81) */
+int  menu_janela(int id, int x, int y, const char *itens);
+/* Área de cópia do sistema (texto): copiar num programa, colar em outro. */
+int  area_copia_gravar(const char *t, unsigned n);
+int  area_copia_ler(char *buf, unsigned max);   /* -> tamanho do texto guardado (pode ser > max) */           /* "A|B|C"; escolha em EV_MENU (H81) */
 
 /* ---- dispositivos (fase 6) ---- */
 int  listar_discos(int indice, info_disco_t *d);   /* 1 = achou, 0 = acabou */

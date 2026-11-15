@@ -78,6 +78,9 @@ PROGRAMAS += $(B)/userland/bin/video
 # O Sagui Code (fase 8).
 SAGUICODE_OBJ := $(patsubst userland/saguicode/%.c,$(B)/userland/saguicode/%.o,$(wildcard userland/saguicode/*.c))
 PROGRAMAS += $(B)/userland/bin/saguicode
+# O Tocador de músicas (pedido do Eli): a janela e, quando chegar, o decodificador de MP3.
+TOCADOR_OBJ := $(B)/userland/tocador/tocador.o
+PROGRAMAS += $(B)/userland/bin/tocador
 # O compilador C do SaguiOS (fase 7 da versão 2.0): o comando cc, a libsagui
 # num objeto só (o que o cc liga aos programas) e os cabeçalhos que ele lê.
 COMPILADOR_OBJ := $(patsubst userland/compilador/%.c,$(B)/userland/compilador/%.o,$(wildcard userland/compilador/*.c))
@@ -191,6 +194,15 @@ $(B)/userland/bin/video: $(VIDEO_OBJ) $(LIBSAGUI_OBJ) userland/programa.ld
 # /bin/cipo é o mesmo programa com o nome novo (H82).
 $(B)/userland/bin/cipo: $(B)/userland/bin/navegador
 	cp $< $@
+
+$(B)/userland/tocador/%.o: userland/tocador/%.c $(wildcard userland/tocador/*.h) $(USER_HDR)
+	@mkdir -p $(dir $@)
+	$(CC) $(UCFLAGS) -c -o $@ $<
+
+$(B)/userland/bin/tocador: $(TOCADOR_OBJ) $(LIBSAGUI_OBJ) userland/programa.ld
+	@mkdir -p $(dir $@)
+	$(LD) $(ULDFLAGS) -o $@.elf $(TOCADOR_OBJ) $(LIBSAGUI_OBJ)
+	objcopy --strip-all $@.elf $@
 
 $(B)/userland/saguicode/%.o: userland/saguicode/%.c userland/saguicode/ia.h $(USER_HDR)
 	@mkdir -p $(dir $@)

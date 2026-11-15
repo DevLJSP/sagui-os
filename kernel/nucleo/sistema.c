@@ -57,6 +57,7 @@ static const chamada_t tabela[SIS_MAX] = {
     [SIS_ALEATORIO] = sis_aleatorio,
     [SIS_JANELA_OPCOES] = sis_janela_opcoes,
     [SIS_MENU_JANELA]   = sis_menu_janela,
+    [SIS_AREA_COPIA]    = sis_area_copia,
 };
 
 bool usuario_ok(const void *p, uint32_t n, bool escrita)

@@ -165,6 +165,47 @@ static void voltar(void)
     carregar();
 }
 
+/* Que programa abre este arquivo, pela extensão (dois cliques). O que não
+ * estiver na lista abre no Editor, como antes. */
+static bool termina_com(const char *s, const char *fim)
+{
+    unsigned a = tam_texto(s), b = tam_texto(fim);
+    if (a < b) return false;
+    for (unsigned i = 0; i < b; i++) {
+        char c = s[a - b + i];
+        if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
+        if (c != fim[i]) return false;
+    }
+    return true;
+}
+
+static const char *programa_para(const char *nome)
+{
+    static const struct { const char *ext, *prog; } tabela[] = {
+        { ".wav", "/bin/tocador" }, { ".mp3", "/bin/tocador" },
+        { ".html", "/bin/cipo" }, { ".htm", "/bin/cipo" },
+        { ".png", "/bin/cipo" }, { ".jpg", "/bin/cipo" }, { ".jpeg", "/bin/cipo" }, { ".gif", "/bin/cipo" },
+        { ".webp", "/bin/cipo" }, { ".svg", "/bin/cipo" }, { ".mp4", "/bin/video" },
+    };
+    for (unsigned k = 0; k < sizeof tabela / sizeof tabela[0]; k++)
+        if (termina_com(nome, tabela[k].ext)) return tabela[k].prog;
+    return "/bin/editor";
+}
+
+static void abrir_com(int i, const char *programa)
+{
+    char c[200];
+    caminho_de(i, c, sizeof c);
+    const char *nome = programa;
+    for (const char *p = programa; *p; p++) if (*p == '/') nome = p + 1;
+    char *argv[3] = { (char *)nome, c, NULL };
+    int pid = executar(programa, argv);
+    registrar("arquivos: abrindo %s com %s (pid %d)", c, programa, pid);
+    char msg[200];
+    formatar_texto(msg, sizeof msg, pid > 0 ? "Abrindo %s..." : "Não consegui abrir %s", nomes[i]);
+    desenhar_rodape(msg);
+}
+
 static void abrir_item(int i)
 {
     if (i < 0 || i >= lista.qtd) return;
@@ -178,9 +219,8 @@ static void abrir_item(int i)
         pid = executar(c, argv);
         registrar("arquivos: executando %s (pid %d)", c, pid);
     } else {
-        argv[0] = "editor"; argv[1] = c; argv[2] = NULL;
-        pid = executar("/bin/editor", argv);
-        registrar("arquivos: abrindo no editor %s (pid %d)", c, pid);
+        abrir_com(i, programa_para(nomes[i]));
+        return;
     }
     char msg[200];
     formatar_texto(msg, sizeof msg, pid > 0 ? "Abrindo %s..." : "Não consegui abrir %s", nomes[i]);
@@ -291,14 +331,23 @@ int principal(int argc, char **argv)
         if (e.tipo == EV_MENU) {                            /* menu do botão direito (H81) */
             registrar("arquivos: menu %u", e.tecla);
             if (e.tecla == 0 && lista.sel >= 0) abrir_item(lista.sel);
-            else if (e.tecla == 1) apagar_item();
-            else if (e.tecla == 2) nova_pasta();
-            else if (e.tecla == 3) voltar();
+            else if (e.tecla == 1 && lista.sel >= 0 && tipos[lista.sel] != TIPO_PASTA) abrir_com(lista.sel, "/bin/editor");
+            else if (e.tecla == 2) apagar_item();
+            else if (e.tecla == 3) nova_pasta();
+            else if (e.tecla == 4) voltar();
             continue;
         }
         int r = lista_tratar(j, &lista, &e);
         if (e.tipo == EV_CLIQUE && (e.botoes & 2)) {
-            jan_menu(j, e.x, e.y, "Abrir|Apagar...|Nova pasta...|Voltar");
+            /* O primeiro item diz com que programa abre (pela extensão). */
+            static char itens[160];
+            const char *prog = lista.sel >= 0 && tipos[lista.sel] != TIPO_PASTA && tipos[lista.sel] != TIPO_PROGRAMA
+                             ? programa_para(nomes[lista.sel]) : NULL;
+            formatar_texto(itens, sizeof itens, "%s|Abrir no Editor|Apagar...|Nova pasta...|Voltar",
+                           !prog ? "Abrir" : compara_texto(prog, "/bin/tocador") == 0 ? "Abrir no Tocador" :
+                           compara_texto(prog, "/bin/cipo") == 0 ? "Abrir no Cipó" :
+                           compara_texto(prog, "/bin/video") == 0 ? "Abrir no Vídeo" : "Abrir no Editor");
+            jan_menu(j, e.x, e.y, itens);
             continue;
         }
         if (r == LISTA_ATIVOU) abrir_item(lista.sel);
