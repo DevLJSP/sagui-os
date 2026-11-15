@@ -35,7 +35,9 @@ def main():
                          arquivos={"musicas/a-la440.wav": wav_teste(440, 22050, 2.0),
                                    "musicas/b-mi660.wav": wav_teste(660, 44100, 2.0),
                                    "musicas/c-seno440.mp3": open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                                                              "recursos", "h86_seno440.mp3"), "rb").read()})
+                                                                              "recursos", "h86_seno440.mp3"), "rb").read(),
+                                   "musicas/z-pagina.html": b"<html><body>oi</body></html>",
+                                   "musicas/z-texto.txt": b"oi"})
     with Maquina("h87", "ide", memoria="768M", extras=som_qemu(wav) + ["-device", "usb-ehci,id=ehci"] + pendrive_qemu(pen)) as m:
         m.esperar_serial("sagui:/$", 120)
         time.sleep(1)
@@ -50,13 +52,25 @@ def main():
         xi, yi = a["x"] + 170 + 6 + 60, a["y"] + 70 + 2 + 10
         m.clique(xi, yi, botao=2)                         # botão direito: o menu diz "Abrir no Tocador"
         s = esperar(m, "menu aberto (tipo 3", 10, antes)
-        m.captura("H87-1-menu-abrir-no-tocador")
+        png = m.captura("H87-1-menu-abrir-no-tocador")
+        # Ícones por tipo (pedido do Eli): a nota verde da música no 1º item, a
+        # faixa azul da página no 4º, e o texto comum (sem verde) no 5º.
+        from qemu import cor_do_pixel as cor
+        ix = a["x"] + 140 + 6 + 6   # a lista começa em LATERAL (140) + 6; o ícone, 6 depois
+
+        def cores_do_icone(item):
+            y0 = a["y"] + 70 + 2 + item * 20 + 2
+            return {cor(png, ix + i, y0 + k) for i in range(16) for k in range(16)}
+        verificar((0x0B, 0x7A, 0x3E) in cores_do_icone(0), "o .wav tem o ícone de música (nota verde)")
+        verificar((0x0B, 0x7A, 0x3E) in cores_do_icone(2), "o .mp3 também")
+        verificar((0x2A, 0x6F, 0xD8) in cores_do_icone(3), "o .html tem o ícone de página (faixa azul)")
+        verificar((0x0B, 0x7A, 0x3E) not in cores_do_icone(4), "o .txt continua com o ícone de texto")
         m.clique(a["x"] + 400, a["y"] + 20)               # fecha o menu sem escolher
         antes = len(m.serial())
         m.clique(xi, yi, duplo=True)
         s = esperar(m, "abrindo /usb/musicas/a-la440.wav com /bin/tocador", 15, antes)
         verificar(True, "dois cliques num .wav abrem o Tocador (pela extensão)")
-        s = esperar(m, "tocador: pronto (3 m", 20, antes)
+        s = esperar(m, "tocador: pronto (3 m", 20, antes)   # só as músicas: a página e o texto ficam de fora
         verificar(True, "o Tocador lista as 3 músicas da pasta (2 WAV e 1 MP3)")
         time.sleep(1.5)
         m.captura("H87-2-tocador")

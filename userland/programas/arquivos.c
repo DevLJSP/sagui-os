@@ -44,6 +44,54 @@ static const char *const ic_programa[] = {
     ".PPPPPPPPPPPPPP.", "................", "................", "................",
 };
 
+/* Ícones por tipo de arquivo (pedido do Eli: o .wav aparecia como texto). */
+static const char *const ic_musica[] = {          /* uma nota musical */
+    "..PPPPPPPPPPPP..", "..PBBBBBBBBBBP..", "..PBBBBBNNNBBP..", "..PBBBBBNBNNBP..",
+    "..PBBBBBNBBNBP..", "..PBBBBBNBBBBP..", "..PBBBBBNBBBBP..", "..PBBBBBNBBBBP..",
+    "..PBBBNNNBBBBP..", "..PBBNNNNBBBBP..", "..PBBNNNNBBBBP..", "..PBBBNNBBBBBP..",
+    "..PBBBBBBBBBBP..", "..PBBBBBBBBBBP..", "..PPPPPPPPPPPP..", "................",
+};
+static const char *const ic_imagem[] = {          /* céu, sol e morro */
+    "................", "PPPPPPPPPPPPPPPP", "PSSSSSSSSSSSSSSP", "PSSSSSSSSSOOSSSP",
+    "PSSSSSSSSSOOSSSP", "PSSSSSSSSSSSSSSP", "PSSSSSGSSSSSSSSP", "PSSSSGGGSSSSSSSP",
+    "PSSSGGGGGSSSGSSP", "PSSGGGGGGGSGGGSP", "PSGGGGGGGGGGGGGP", "PGGGGGGGGGGGGGGP",
+    "PPPPPPPPPPPPPPPP", "................", "................", "................",
+};
+static const char *const ic_pagina[] = {          /* uma página com a faixa azul de navegador */
+    "................", "PPPPPPPPPPPPPPPP", "PVVVVVVVVVVVVVVP", "PVBVBVBVVVVVVVVP",
+    "PPPPPPPPPPPPPPPP", "PBBBBBBBBBBBBBBP", "PBNNNNNNNBBBBBBP", "PBBBBBBBBBBBBBBP",
+    "PBCCCCCCCCCCCCBP", "PBCCCCCCCCCCBBBP", "PBBBBBBBBBBBBBBP", "PBVVVVVBBBBBBBBP",
+    "PBBBBBBBBBBBBBBP", "PPPPPPPPPPPPPPPP", "................", "................",
+};
+static const char *const ic_video[] = {           /* um rolo de filme com o botão de tocar */
+    "................", "PPPPPPPPPPPPPPPP", "PBPBPBPBPBPBPBPP", "PPPPPPPPPPPPPPPP",
+    "PDDDDDDDDDDDDDDP", "PDDDDDBDDDDDDDDP", "PDDDDDBBDDDDDDDP", "PDDDDDBBBDDDDDDP",
+    "PDDDDDBBBBDDDDDP", "PDDDDDBBBDDDDDDP", "PDDDDDBBDDDDDDDP", "PDDDDDBDDDDDDDDP",
+    "PPPPPPPPPPPPPPPP", "PBPBPBPBPBPBPBPP", "PPPPPPPPPPPPPPPP", "................",
+};
+
+static bool extensao(const char *s, const char *fim)
+{
+    unsigned a = tam_texto(s), b = tam_texto(fim);
+    if (a < b) return false;
+    for (unsigned i = 0; i < b; i++) {
+        char c = s[a - b + i];
+        if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
+        if (c != fim[i]) return false;
+    }
+    return true;
+}
+
+static const char *const *icone_do_arquivo(const char *nome)
+{
+    if (extensao(nome, ".wav") || extensao(nome, ".mp3")) return ic_musica;
+    if (extensao(nome, ".png") || extensao(nome, ".jpg") || extensao(nome, ".jpeg") || extensao(nome, ".gif") ||
+        extensao(nome, ".webp") || extensao(nome, ".svg") || extensao(nome, ".bmp")) return ic_imagem;
+    if (extensao(nome, ".html") || extensao(nome, ".htm")) return ic_pagina;
+    if (extensao(nome, ".mp4")) return ic_video;
+    return ic_arquivo;
+}
+
 static uint32_t paleta(char c)
 {
     switch (c) {
@@ -55,13 +103,16 @@ static uint32_t paleta(char c)
     case 'V': return 0x2A6FD8;
     case 'D': return 0x182030;
     case 'G': return 0x3CDC6E;
+    case 'N': return 0x0B7A3E;   /* nota e texto em verde */
+    case 'S': return 0x8FD0F0;   /* céu */
+    case 'O': return 0xFFD23A;   /* sol */
     default:  return 0xFF000000;
     }
 }
 
 static void icone(jan_t *jj, int x, int y, int i)
 {
-    const char *const *d = tipos[i] == TIPO_PASTA ? ic_pasta : tipos[i] == TIPO_PROGRAMA ? ic_programa : ic_arquivo;
+    const char *const *d = tipos[i] == TIPO_PASTA ? ic_pasta : tipos[i] == TIPO_PROGRAMA ? ic_programa : icone_do_arquivo(nomes[i]);
     g_desenho(jj, x, y, d, 16, 16, paleta, 1);
 }
 
