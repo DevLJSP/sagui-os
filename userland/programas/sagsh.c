@@ -80,6 +80,8 @@ static const comando_t comandos[] = {
     { "banana", NULL, false, true, "jogo do sagui", "banana", "Abre o jogo Sagui Pega Banana." },
     { "configuracoes", NULL, false, true, "abre as Configurações", "configuracoes [aba]", "Abre as Configurações (relógio, aparência, sobre o computador)." },
     { "sagui3d", NULL, false, true, "jogo em 3D", "sagui3d [fase]", "Abre o jogo Sagui 3D (ou só uma fase, dando o arquivo)." },
+    { "jogos", NULL, false, true, "lista de jogos", "jogos", "Abre o lançador de jogos (o item Jogos do menu do sagui)." },
+    { "cacabananas", NULL, false, true, "ache as bombas", "cacabananas [--nivel 1|2|3]", "Abre o Caça-Bananas: ache as bananas-bomba do bananal." },
     { "triangulos", NULL, false, true, "teste de desenho", "triangulos", "Triângulos girando em 3D, com os quadros por segundo: mede a velocidade do desenho. +/- muda a quantidade." },
     { "chuva", NULL, false, true, "chuva de letras", "chuva", "Abre uma janela com letras verdes caindo. Espaço pausa; Esc fecha." },
 };

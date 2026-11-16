@@ -99,6 +99,11 @@ COMPILADOR_OBJ := $(patsubst userland/compilador/%.c,$(B)/userland/compilador/%.
 PROGRAMAS += $(B)/userland/bin/cc
 CC_LIB := $(B)/userland/libsagui.o
 CC_INC := userland/inc/sagui.h userland/inc/gui.h userland/inc/http.h kernel/inc/abi.h
+# Os jogos com vários arquivos (H92): cada pasta de userland/jogos/ vira um
+# programa com o nome dela. As regras de cada jogo ficam num arquivo à parte,
+# que os testes também compilam no computador de desenvolvimento.
+JOGOS := $(notdir $(wildcard userland/jogos/*))
+PROGRAMAS += $(addprefix $(B)/userland/bin/,$(JOGOS))
 PROG_TESTE := $(patsubst userland/testes/%.c,$(B)/userland/testes/%,$(wildcard userland/testes/*.c))
 
 .PHONY: all vazio vdi test rodar run entrega limpar dashboard
@@ -176,6 +181,18 @@ $(B)/userland/bin/jogos: $(B)/userland/programas/jogos.o $(B)/userland/arte_icon
 	@mkdir -p $(dir $@)
 	$(LD) $(ULDFLAGS) -o $@.elf $< $(B)/userland/arte_icones.o $(LIBSAGUI_OBJ)
 	objcopy --strip-all $@.elf $@
+
+$(B)/userland/jogos/%.o: userland/jogos/%.c $(wildcard userland/jogos/*/*.h) $(USER_HDR)
+	@mkdir -p $(dir $@)
+	$(CC) $(UCFLAGS) -c -o $@ $<
+
+define REGRA_JOGO
+$(B)/userland/bin/$(1): $$(patsubst %.c,$(B)/%.o,$$(wildcard userland/jogos/$(1)/*.c)) $$(JOGO_EXTRA_$(1)) $(LIBSAGUI_OBJ) userland/programa.ld
+	@mkdir -p $$(dir $$@)
+	$(LD) $(ULDFLAGS) -o $$@.elf $$(filter %.o,$$^)
+	objcopy --strip-all $$@.elf $$@
+endef
+$(foreach j,$(JOGOS),$(eval $(call REGRA_JOGO,$(j))))
 
 $(B)/userland/sagui3d/%.o: userland/sagui3d/%.c userland/sagui3d/jogo.h $(USER_HDR)
 	@mkdir -p $(dir $@)
