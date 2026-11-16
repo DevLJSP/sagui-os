@@ -45,6 +45,11 @@ static const comando_t comandos[] = {
     { "ps", "processos", false, false, "lista processos", "ps", "Mostra os processos em execução: PID, pai, estado, memória e tempo de CPU." },
     { "top", "monitor", false, false, "processos ao vivo", "top [-n vezes]", "Mostra os processos, a memória e a %CPU de cada um, atualizando a cada segundo. q sai." },
     { "grep", "procurar", false, false, "procura texto", "grep [-i] [-n] [-v] [-c] <texto> [arquivo...]", "Mostra as linhas que contêm o texto (ex.: ls bin | grep a). -i ignora maiúsculas, -n numera, -v inverte, -c conta." },
+    { "gzip", "compactar", false, false, "compacta (.gz)", "gzip [-d] [-c] [-k] [-f] [-l] [-1..-9] <arquivo...>", "Compacta cada arquivo em arquivo.gz (e apaga o original; -k guarda). -d descompacta, -c manda para a saída, -l lista, -f substitui." },
+    { "gunzip", "descompactar", false, false, "descompacta .gz", "gunzip [-c] [-k] [-f] <arquivo.gz...>", "Descompacta arquivos .gz (e .tgz, que vira .tar). Não substitui um arquivo que já existe sem -f." },
+    { "tar", "empacotar", false, false, "pacotes .tar", "tar c|x|t [v] [z] [o] f <pacote.tar> [arquivos...] [-C pasta]", "c cria o pacote, x extrai, t lista; v mostra os nomes, z compacta (.tar.gz), o substitui o que já existe. Nomes com \"..\" são recusados." },
+    { "zip", "zipar", false, false, "cria um .zip", "zip [-0..-9] [-q] <pacote.zip> <arquivos ou pastas...>", "Cria um pacote .zip; as pastas entram com tudo dentro. -0 só guarda, -9 compacta mais." },
+    { "unzip", "deszipar", false, false, "abre um .zip", "unzip [-l] [-t] [-o] [-d pasta] <pacote.zip>", "Extrai um .zip na pasta atual (ou na do -d). -l lista, -t confere, -o substitui o que já existe. Nomes com \"..\" são recusados." },
     /* Utilitários de texto (H91, do fork SaguiOS-Extended do Alejandro Anuncibay). */
     { "head", "inicio", false, false, "começo do texto", "head [-n N | -N] [-c N] [-q | -v] [arquivo...]", "Mostra as primeiras linhas (10, ou N com -n) de arquivos ou da entrada (ex.: ls bin | head -3). -c conta bytes." },
     { "tail", "fim", false, false, "fim do texto", "tail [-n [+]N] [-c [+]N] [-f] [arquivo...]", "Mostra as últimas linhas (10, ou N com -n); com +N, da linha N em diante. -f continua mostrando o que for acrescentado." },
