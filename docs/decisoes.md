@@ -1687,6 +1687,47 @@ AltGr e a tecla Del do teclado numérico (ponto no ES). O euro do AltGr+E não
 existe no Latin-1 e ficou de fora. O ~ do AltGr+4 é tecla morta, como no
 ABNT2: ~ + espaço dá o próprio ~.
 
+## D052. Compactação na libsagui: DEFLATE próprio, gzip, tar e zip (H93)
+
+O SaguiOS ganhou `gzip`/`gunzip`, `tar` e `zip`/`unzip` (apelidos
+`compactar`, `descompactar`, `empacotar`, `zipar` e `deszipar`), ideia trazida
+do fork do Alejandro Anuncibay. Os programas básicos e a libsagui são núcleo
+(D041), então tudo foi escrito aqui:
+
+- **Um DEFLATE só, na libsagui** (`compactar.c`, `compactar.h`). O
+  descompactador é o do navegador (H59), que saiu de
+  `userland/navegador/descompactar.c` e agora serve também ao PNG, às fontes
+  do Cipó e aos programas novos, conferindo mais coisas (NLEN dos blocos
+  guardados, códigos de Huffman com códigos demais, o Adler-32 do zlib) e
+  podendo alocar a saída, com um limite de 256 MB contra "bombas".
+- **O compactador é nosso, da RFC 1951.** O do fork foi lido, mas não
+  aproveitado: ele traz marcas do zlib (a tabela de níveis com os limites
+  "bom" e "preguiçoso", o corte de repetições de 3 bytes a mais de 4096 de
+  distância, a constante 5552 do Adler-32). O nosso procura repetições com
+  uma tabela de hash de 3 bytes e cadeias de posições (a ideia da seção 4 da
+  RFC), olha 4 a 1024 candidatos conforme o nível, espera um byte do nível 4
+  em diante, monta códigos de Huffman (1952) com o limite de 15 bits
+  garantido por um conserto da soma de Kraft, e cada bloco de até 16384
+  símbolos sai guardado, com códigos fixos ou próprios, o que custar menos
+  bits. No texto e em binários fica igual ou um pouco menor que o zlib
+  nível 6; dados aleatórios crescem só os cabeçalhos dos blocos guardados.
+- **Tudo na memória.** Os programas leem o arquivo inteiro, compactam e
+  gravam. É simples, e os arquivos do SaguiOS cabem na memória; um pacote
+  de várias centenas de MB pediria compactar em fluxo, que fica para depois.
+- **Nomes.** No SaguiOS os nomes são Latin-1; dentro do .tar e do .zip vão
+  em UTF-8 (no zip, com o bit 11 ligado só quando há acento), como os outros
+  sistemas esperam. Na volta, o que não existe em Latin-1 vira "_"; um zip
+  sem o bit 11 é lido como página de código 437.
+- **Extrair é perigoso, e os programas se protegem**: nomes absolutos ou
+  com ".." são recusados (`caminho_seguro`), ligações simbólicas do tar são
+  ignoradas, e nada que já existe é substituído sem pedir (`-f` no gunzip,
+  a letra `o` no tar, `-o` no unzip). Os testes conferem com pacotes
+  maliciosos feitos pelo Python.
+- **Como se sabe que está certo.** `tests/h93_compactar_pc.py` compila o
+  `compactar.c` no computador e confere ida e volta com o zlib e o gzip do
+  Python nos dois sentidos; `tests/h93_compactar.py` usa os programas dentro
+  do SaguiOS e confere tudo no computador com o `tarfile` e o `zipfile`.
+
 ## D053. Os jogos do fork de Alejandro: menu "Jogos" e uma pasta por jogo (H92)
 
 O fork SaguiOS-Extended de Alejandro Anuncibay (GPL 2 "ou posterior",
