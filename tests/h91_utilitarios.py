@@ -22,6 +22,9 @@ FRUTAS = "banana 3\nmaçã 10\nabacaxi 2\nBanana 7\nuva 10\nuva 10\nkiwi 1.5\n"
 NUMEROS = "".join(f"{i}\n" for i in range(1, 26))
 CAMPOS = "a:b:c\nd:e:f\nsem\n1:2:3:4\n"
 
+NOMES = ("head/inicio", "tail/fim", "sort/ordenar", "uniq/unicos", "cut/cortar",
+         "tr/trocar", "seq/sequencia", "rev/inverter", "tac/de-tras", "nl/numerar")
+
 ARQUIVOS = {
     "frutas.txt": FRUTAS,
     "numeros.txt": NUMEROS,
@@ -67,11 +70,18 @@ def main():
         m.esperar_serial("sagui:/$", 120)
         time.sleep(1)
         out = m.comando("ajuda")
-        for nome in ("head/inicio", "tail/fim", "sort/ordenar", "uniq/unicos", "cut/cortar"):
+        for nome in NOMES:
             verificar(nome in out, f"o ajuda lista {nome}")
         m.comando("montar")
         m.comando("cd /usb")
+        lote1(m)
+        lote2(m)
+    return 0
 
+
+def lote1(m):
+    """head, tail, sort, uniq e cut."""
+    if True:
         # ---- head
         confere(m, "head -3 numeros.txt", "1\n2\n3\n", "head")
         confere(m, "head -n 2 campos.txt frutas.txt",
@@ -112,7 +122,37 @@ def main():
         rodar(m, "cut numeros.txt")
         verificar(codigo(m, "cut") == 1, "cut sem lista: uso e código 1")
         m.captura("H91-1-head-tail-sort-uniq-cut")
-    return 0
+
+
+def lote2(m):
+    """tr, seq, rev, tac e nl."""
+    # ---- tr
+    confere(m, "cat campos.txt | tr a-z A-Z", "A:B:C\nD:E:F\nSEM\n1:2:3:4\n", "tr")
+    confere(m, "trocar [:lower:] [:upper:] < frutas.txt | head -2", "BANANA 3\nMAÇÃ 10\n")
+    confere(m, "echo \"aa  bb   c\" | tr -s \" \"", "aa bb c\n")
+    confere(m, "tr -d : < campos.txt | tail -1", "1234\n")
+    confere(m, "tr -cd 0-9 < frutas.txt", "31027101015")
+    rodar(m, "tr a")
+    verificar(codigo(m, "tr") == 1, "tr com um conjunto só: uso e código 1")
+
+    # ---- seq
+    confere(m, "seq 4", "1\n2\n3\n4\n", "seq")
+    confere(m, "seq 10 -3 1", "10\n7\n4\n1\n")
+    confere(m, "seq -w 8 10", "08\n09\n10\n")
+    confere(m, "sequencia -s , 0 0.5 2", "0.0,0.5,1.0,1.5,2.0\n")
+    rodar(m, "seq x")
+    verificar(codigo(m, "seq") == 1, "seq com algo que não é número: código 1")
+
+    # ---- rev e tac
+    confere(m, "echo sagui | rev", "iugas\n", "rev")
+    confere(m, "inverter frutas.txt | head -2", "3 ananab\n01 ãçam\n")
+    confere(m, "tac campos.txt", "1:2:3:4\nsem\nd:e:f\na:b:c\n", "tac")
+    confere(m, "seq 5 | de-tras | head -2", "5\n4\n")
+
+    # ---- nl
+    confere(m, "nl campos.txt | head -2", "     1\ta:b:c\n     2\td:e:f\n", "nl")
+    confere(m, "seq 3 | numerar -n rz -w 3 -s \": \" -v 10 -i 5", "010: 1\n015: 2\n020: 3\n")
+    m.captura("H91-2-tr-seq-rev-tac-nl")
 
 
 if __name__ == "__main__":
