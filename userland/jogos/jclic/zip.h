@@ -3,7 +3,7 @@
  * Feito a partir da especificação pública do formato (PKWARE, APPNOTE.TXT):
  * o "diretório central" no fim do arquivo lista as entradas; cada uma diz
  * onde está o seu cabeçalho local, o método (0 = guardado, 8 = DEFLATE) e
- * os tamanhos. O DEFLATE é o do Cipó (userland/navegador/descompactar.c,
+ * os tamanhos. O DEFLATE é o da libsagui (userland/libsagui/compactar.c; antes o do Cipó,
  * RFC 1951), que já é do SaguiOS. */
 #ifndef JCLIC_ZIP_H
 #define JCLIC_ZIP_H
@@ -32,7 +32,8 @@ typedef struct {
     uint32_t  larg, alt;
     uint32_t *px;                 /* 0xAARRGGBB */
 } imagem_t;
-int       inflar(const uint8_t *dados, uint32_t n, uint8_t *saida, uint32_t max);
+/* O DEFLATE vem da libsagui (compactar.h, H93). */
+#include "compactar.h"
 imagem_t *png_ler(const uint8_t *d, uint32_t n, char *erro, int max_erro);
 imagem_t *jpeg_ler(const uint8_t *d, uint32_t n, char *erro, int max_erro);
 

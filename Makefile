@@ -108,7 +108,7 @@ CC_INC := userland/inc/sagui.h userland/inc/gui.h userland/inc/http.h kernel/inc
 JOGOS := $(notdir $(wildcard userland/jogos/*))
 PROGRAMAS += $(addprefix $(B)/userland/bin/,$(JOGOS))
 # O visor de JClic usa o DEFLATE e as imagens (PNG, JPEG) do Cipó.
-JOGO_EXTRA_jclic := $(B)/nav/userland/navegador/descompactar.o $(B)/nav/userland/navegador/png.o $(B)/nav/userland/navegador/jpeg.o
+JOGO_EXTRA_jclic := $(B)/nav/userland/navegador/png.o $(B)/nav/userland/navegador/jpeg.o
 JCLIC_EXEMPLO := $(wildcard userland/jogos/jclic/exemplo/*)
 PROG_TESTE := $(patsubst userland/testes/%.c,$(B)/userland/testes/%,$(wildcard userland/testes/*.c))
 
