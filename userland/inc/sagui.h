@@ -153,6 +153,11 @@ int  registrar_texto(const char *t);
 
 /* ---- entrada ---- */
 int  ler_linha(int fd, char *buf, unsigned max);   /* tamanho, ou -1 no fim do arquivo */
+/* Ajudas dos utilitários de texto (H91: head, sort, cut...). */
+int   abrir_para_ler(const char *programa, const char *nome);   /* "-" = ENTRADA; avisa o erro sozinho */
+char *ler_ate_o_fim(int fd, unsigned *tam);                         /* tudo até o fim, com um zero no fim; NULL sem memória */
+bool  converter_numero(const char *s, int *valor);             /* false se não for um inteiro decimal */
+int   minuscula_latin1(int c);
 
 /* ---- apoio aos programas de arquivos (H93; apoio_arquivos.c) ---- */
 int      ler_arquivo_inteiro(const char *caminho, uint8_t **dados);   /* tamanho (dados alocados), ou erro */
