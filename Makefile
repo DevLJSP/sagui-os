@@ -288,9 +288,10 @@ $(B)/userland/testes/%: $(B)/userland/testes/%.o $(LIBSAGUI_OBJ) userland/progra
 # ---------- ramdisk (SGFS) ----------
 # O ramdisk é montado a partir de uma cópia do rootfs/ com os programas em
 # /bin e os programas de teste em /testes.
-$(B)/ramdisk.sgfs: $(ROOTFS) $(PROGRAMAS) $(PROG_TESTE) $(CC_LIB) $(CC_INC) docs/c-do-sagui.md tools/mksgfs.py
+$(B)/ramdisk.sgfs: $(ROOTFS) $(PROGRAMAS) $(PROG_TESTE) $(CC_LIB) $(CC_INC) docs/c-do-sagui.md tools/mksgfs.py $(B)/host/chip8asm
 	rm -rf $(B)/rootfs
 	cp -r rootfs $(B)/rootfs
+	for f in rootfs/jogos/chip8/*.asm; do $(B)/host/chip8asm $$f $(B)/rootfs/jogos/chip8/$$(basename $$f .asm).ch8 || exit 1; done
 	$(if $(PROGRAMAS),cp $(PROGRAMAS) $(B)/rootfs/bin/)
 	$(if $(PROG_TESTE),mkdir -p $(B)/rootfs/testes && cp $(PROG_TESTE) $(B)/rootfs/testes/)
 	mkdir -p $(B)/rootfs/sistema/lib $(B)/rootfs/sistema/inc $(B)/rootfs/sistema/ajuda
@@ -298,6 +299,13 @@ $(B)/ramdisk.sgfs: $(ROOTFS) $(PROGRAMAS) $(PROG_TESTE) $(CC_LIB) $(CC_INC) docs
 	cp $(CC_INC) $(B)/rootfs/sistema/inc/
 	cp docs/c-do-sagui.md $(B)/rootfs/sistema/ajuda/   # o manual que o Sagui Code manda para a IA (H71)
 	$(PY) tools/mksgfs.py $(B)/rootfs $@
+
+# O montador de CHIP-8 (H92) também roda aqui, no computador de
+# desenvolvimento: as ROMs de exemplo de /jogos/chip8 saem dos .asm de
+# rootfs/jogos/chip8 na hora do build (nenhum binário pronto no repositório).
+$(B)/host/chip8asm: tools/chip8asm.c userland/jogos/chip8asm/montador.c userland/jogos/chip8asm/montador.h
+	@mkdir -p $(dir $@)
+	gcc -O2 -Wall -Wextra -DTESTE_HOSPEDEIRO -Iuserland/jogos/chip8asm -o $@ tools/chip8asm.c userland/jogos/chip8asm/montador.c
 
 # ---------- imagem final ----------
 $(B)/saguios.img: $(B)/boot/mbr.bin $(B)/boot/estagio2.bin $(B)/kernel.bin $(B)/ramdisk.sgfs tools/mkimagem.py
