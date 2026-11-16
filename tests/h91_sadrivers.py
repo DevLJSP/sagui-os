@@ -378,6 +378,62 @@ class TesteListaAutorizada(unittest.TestCase):
             self.assertEqual(len(lista), 1)
             self.assertEqual(lista[0].estado, "ausente")
             self.assertIsNone(lista[0].caminho)
+            self.assertIsNone(lista[0].motivo)
+
+    def test_listado_link_simbolico_recusado_sem_abrir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp).resolve()
+            alvo = base / "alvo.bin"
+            alvo.write_bytes(b"nao abra")
+            link = base / "saguios.teste.sadrivers"
+            try:
+                os.symlink(alvo, link)
+            except (OSError, NotImplementedError):
+                self.skipTest("criar link simbólico exige privilégio neste Windows")
+            (base / "ativo.txt").write_text("saguios.teste\n", encoding="ascii")
+            abertos = []
+            abrir_original = sadrv.os.open
+            path_open_original = Path.open
+
+            def abrir_espiao(caminho, *args, **kwargs):
+                caminho = Path(caminho)
+                abertos.append(caminho)
+                if caminho in (link, alvo):
+                    raise AssertionError(f"não deveria abrir {caminho}")
+                return abrir_original(caminho, *args, **kwargs)
+
+            def path_open_espiao(caminho, *args, **kwargs):
+                if caminho in (link, alvo):
+                    raise AssertionError(f"não deveria abrir {caminho}")
+                return path_open_original(caminho, *args, **kwargs)
+
+            sadrv.os.open = abrir_espiao
+            Path.open = path_open_espiao
+            try:
+                lista = sadrv.listar_pacotes(base)
+            finally:
+                sadrv.os.open = abrir_original
+                Path.open = path_open_original
+            self.assertNotIn(link, abertos)
+            self.assertNotIn(alvo, abertos)
+            por_id = {p.id: p for p in lista}
+            item = por_id["saguios.teste"]
+            self.assertEqual(item.estado, "recusado")
+            self.assertEqual(item.caminho, link)
+            self.assertIn("link simbólico", item.motivo)
+            self.assertEqual(alvo.read_bytes(), b"nao abra")
+
+    def test_listado_diretorio_recusado(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp).resolve()
+            pasta = base / "saguios.pasta.sadrivers"
+            pasta.mkdir()
+            (base / "ativo.txt").write_text("saguios.pasta\n", encoding="ascii")
+            lista = sadrv.listar_pacotes(base)
+            item = {p.id: p for p in lista}["saguios.pasta"]
+            self.assertEqual(item.estado, "recusado")
+            self.assertEqual(item.caminho, pasta)
+            self.assertEqual(item.motivo, "diretório")
 
     def test_erro_de_acesso_do_pacote_nao_vira_ausente(self):
         with tempfile.TemporaryDirectory() as tmp:

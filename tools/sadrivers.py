@@ -482,22 +482,30 @@ def caminho_pacote(pasta: os.PathLike, id_driver: str) -> Path:
     return destino
 
 
-def _e_arquivo_regular(caminho: Path) -> bool:
-    """Diz se o caminho é um arquivo regular, sem seguir link simbólico.
+def _classificar_pacote(caminho: Path) -> Tuple[str, Optional[str]]:
+    """Diz se o caminho é um pacote regular, sem seguir link simbólico.
 
     ``Path.is_file()`` segue links e devolveria verdadeiro para um link
     apontando para um pacote qualquer.  Aqui o ``lstat`` examina o próprio
     nome; um link não conta como pacote presente.  Só ``FileNotFoundError``
-    significa "ausente"; outro erro de acesso vira ``ErroUso``, para não
+    significa "ausente".  Um caminho que existe mas é link, pasta ou outro
+    tipo de arquivo é "recusado", com o motivo, para não mentir dizendo que
+    o pacote não existe.  Outro erro de acesso vira ``ErroUso``, para não
     esconder uma permissão negada atrás de um pacote que parece não existir.
     """
     try:
         info = os.lstat(caminho)
     except FileNotFoundError:
-        return False
+        return "ausente", None
     except OSError as erro:
         raise ErroUso(f"não foi possível examinar o pacote {caminho}: {erro}")
-    return stat.S_ISREG(info.st_mode)
+    if stat.S_ISLNK(info.st_mode):
+        return "recusado", "link simbólico"
+    if stat.S_ISDIR(info.st_mode):
+        return "recusado", "diretório"
+    if not stat.S_ISREG(info.st_mode):
+        return "recusado", "não é um arquivo regular"
+    return "presente", None
 
 
 def ler_lista_autorizada(caminho: os.PathLike) -> List[str]:
@@ -539,7 +547,8 @@ def ler_lista_autorizada(caminho: os.PathLike) -> List[str]:
 class PacoteNaPasta:
     id: str
     caminho: Optional[Path]
-    estado: str             # "presente", "ausente" ou "nao_listado"
+    estado: str             # "presente", "ausente", "recusado" ou "nao_listado"
+    motivo: Optional[str] = None
 
 
 def listar_pacotes(pasta: os.PathLike) -> List[PacoteNaPasta]:
@@ -547,17 +556,21 @@ def listar_pacotes(pasta: os.PathLike) -> List[PacoteNaPasta]:
 
     A ordem é a do ativo.txt (incluindo ausentes) e depois os arquivos soltos,
     como na especificação.  Um arquivo não listado aparece pelo nome, mas não
-    é aberto nem verificado.
+    é aberto nem verificado.  Um caminho listado que existe e não é arquivo
+    regular (link simbólico, pasta ou arquivo especial) aparece como
+    "recusado" e com o motivo, nunca como "ausente"; a listagem usa ``lstat``
+    e não abre o destino de um link.
     """
     base = Path(pasta)
     ids = ler_lista_autorizada(base / "ativo.txt")
     resultado: List[PacoteNaPasta] = []
     for id_driver in ids:
         caminho = caminho_pacote(base, id_driver)
-        if _e_arquivo_regular(caminho):
-            resultado.append(PacoteNaPasta(id_driver, caminho, "presente"))
+        estado, motivo = _classificar_pacote(caminho)
+        if estado == "ausente":
+            resultado.append(PacoteNaPasta(id_driver, None, estado, motivo))
         else:
-            resultado.append(PacoteNaPasta(id_driver, None, "ausente"))
+            resultado.append(PacoteNaPasta(id_driver, caminho, estado, motivo))
     vistos = set(ids)
     if base.is_dir():
         for entrada in sorted(base.iterdir(), key=lambda p: p.name):

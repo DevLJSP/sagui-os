@@ -753,6 +753,10 @@ não esconde um pacote que o usuário mandou carregar.
   esses arquivos: sem linha na lista, não há verificação nem carga.
 - Um `ID` listado sem o arquivo `<ID>.sadrivers` aparece como `ausente`; o boot
   continua com os outros pacotes.
+- Na listagem do host, um caminho listado que existe mas não é arquivo regular
+  (link simbólico, pasta ou arquivo especial) aparece como `recusado` com o
+  motivo, e não como `ausente`; a listagem não abre o caminho nem o destino do
+  link.
 - Falha de verificação ou de carga não impede o boot: o sistema segue com os
   embutidos e o motivo aparece no `drivers`. Já um módulo assinado que trava
   durante a entrada trava a máquina (seção 15).
