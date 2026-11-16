@@ -282,6 +282,7 @@ typedef struct {
 #define TECLA_F5        0x10E
 #define TECLA_F12       0x115
 #define TECLA_ESC       0x116
+#define TECLA_SUPER     0x117   /* tecla Windows: fica no gerenciador de janelas */
 #endif
 
 #define JANELA_LARG_MAX 1000
