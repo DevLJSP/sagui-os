@@ -23,13 +23,24 @@ NUMEROS = "".join(f"{i}\n" for i in range(1, 26))
 CAMPOS = "a:b:c\nd:e:f\nsem\n1:2:3:4\n"
 
 NOMES = ("head/inicio", "tail/fim", "sort/ordenar", "uniq/unicos", "cut/cortar",
-         "tr/trocar", "seq/sequencia", "rev/inverter", "tac/de-tras", "nl/numerar")
+         "tr/trocar", "seq/sequencia", "rev/inverter", "tac/de-tras", "nl/numerar",
+         "diff/diferencas", "find/procurar-arquivo", "sed/editar-fluxo", "tree/arvore")
+
+VELHO = "um\ndois\ntres\nquatro\ncinco\nseis\nsete\noito\nnove\ndez\nonze\ndoze\n"
+NOVO = "um\nDOIS\ntres\nquatro\ncinco\nseis\nsete\noito\nnove\nnovo\ndez\nonze\n"
 
 ARQUIVOS = {
     "frutas.txt": FRUTAS,
     "numeros.txt": NUMEROS,
     "campos.txt": CAMPOS,
+    "velho.txt": VELHO,
+    "novo.txt": NOVO,
+    "arv/a.txt": "",
+    "arv/sub1/b.txt": "bb\n",
+    "arv/sub1/sub2/c.log": "",
+    "arv/outra/dez.bin": "0123456789",
 }
+PASTAS = ("arv", "arv/sub1", "arv/sub1/sub2", "arv/outra")
 
 
 def limpo(texto):
@@ -64,7 +75,7 @@ def confere(m, comando, esperado, programa=None, cod=0):
 
 
 def main():
-    pen = criar_pendrive("h91-pen", rotulo="TEXTOS", arquivos=ARQUIVOS)
+    pen = criar_pendrive("h91-pen", rotulo="TEXTOS", arquivos=ARQUIVOS, pastas=PASTAS)
     extras = ["-device", "usb-ehci,id=ehci"] + pendrive_qemu(pen)
     with Maquina("h91", "ide", extras=extras) as m:
         m.esperar_serial("sagui:/$", 120)
@@ -76,6 +87,7 @@ def main():
         m.comando("cd /usb")
         lote1(m)
         lote2(m)
+        lote3(m)
     return 0
 
 
@@ -153,6 +165,52 @@ def lote2(m):
     confere(m, "nl campos.txt | head -2", "     1\ta:b:c\n     2\td:e:f\n", "nl")
     confere(m, "seq 3 | numerar -n rz -w 3 -s \": \" -v 10 -i 5", "010: 1\n015: 2\n020: 3\n")
     m.captura("H91-2-tr-seq-rev-tac-nl")
+
+
+def lote3(m):
+    """diff, find, sed e tree (e as aspas simples do sagsh)."""
+    # ---- diff
+    confere(m, "diff velho.txt novo.txt",
+            "2c2\n< dois\n---\n> DOIS\n9a10\n> novo\n12d12\n< doze\n", "diff", 1)
+    confere(m, "diff velho.txt velho.txt", "", "diff", 0)
+    confere(m, "diff -u velho.txt novo.txt | head -6",
+            "--- velho.txt\n+++ novo.txt\n@@ -1,5 +1,5 @@\n um\n-dois\n+DOIS\n")
+    confere(m, "diferencas -i -q velho.txt novo.txt", "Os arquivos velho.txt e novo.txt são diferentes\n", "diff", 1)
+    confere(m, "seq 25 | diff - numeros.txt", "", "diff", 0)
+    rodar(m, "diff velho.txt nada.txt")
+    verificar(codigo(m, "diff") == 2, "diff com arquivo que não existe: código 2")
+
+    # ---- find
+    confere(m, "find arv | sort", "arv\narv/a.txt\narv/outra\narv/outra/dez.bin\narv/sub1\narv/sub1/b.txt\n"
+            "arv/sub1/sub2\narv/sub1/sub2/c.log\n", "find")
+    confere(m, "find arv -name \"*.txt\" | sort", "arv/a.txt\narv/sub1/b.txt\n")
+    confere(m, "find arv -type d -maxdepth 1 | sort", "arv\narv/outra\narv/sub1\n")
+    confere(m, "procurar-arquivo arv -type f ! -name \"*.txt\" | sort", "arv/outra/dez.bin\narv/sub1/sub2/c.log\n")
+    confere(m, "find arv -size +5c", "arv/outra/dez.bin\n")
+    confere(m, "find arv -empty -type f | sort", "arv/a.txt\narv/sub1/sub2/c.log\n")
+    rodar(m, "find arv -cor azul")
+    verificar(codigo(m, "find") == 1, "find com condição desconhecida: código 1")
+
+    # ---- sed (com aspas simples, como se escreve nos outros sistemas)
+    confere(m, "sed 's/:/-/g' campos.txt", "a-b-c\nd-e-f\nsem\n1-2-3-4\n", "sed")
+    confere(m, "sed s/a/X/ frutas.txt | head -2", "bXnana 3\nmXçã 10\n")
+    confere(m, "sed -n 2,4p numeros.txt", "2\n3\n4\n")
+    confere(m, "sed '/^[0-9]/d' campos.txt", "a:b:c\nd:e:f\nsem\n")
+    confere(m, "seq 10 | sed -n '/4/,/6/p'", "4\n5\n6\n")
+    confere(m, "sed '$!d' numeros.txt", "25\n")
+    confere(m, "sed 's/an*/<&>/g;3q' frutas.txt", "b<an><an><a> 3\nm<a>çã 10\n<a>b<a>c<a>xi 2\n")
+    confere(m, "editar-fluxo -E 's/[0-9]+/N/' frutas.txt | tail -1", "kiwi N.5\n")
+    confere(m, "sed 'y/abc/ABC/;2i antes' campos.txt | head -3", "A:B:C\nantes\nd:e:f\n")
+    rodar(m, "sed 's/a/b' campos.txt")
+    verificar(codigo(m, "sed") == 1, "sed com s sem fim: erro e código 1")
+
+    # ---- tree
+    confere(m, "tree arv", "arv\n|-- a.txt\n|-- outra/\n|   `-- dez.bin\n`-- sub1/\n    |-- b.txt\n"
+            "    `-- sub2/\n        `-- c.log\n\n3 pastas, 4 arquivos\n", "tree")
+    confere(m, "arvore -d -L 1 arv", "arv\n|-- outra/\n`-- sub1/\n\n2 pastas, 0 arquivos\n")
+    m.comando("limpar")
+    m.comando("tree arv")
+    m.captura("H91-3-diff-find-sed-tree")
 
 
 if __name__ == "__main__":

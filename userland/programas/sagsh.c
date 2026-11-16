@@ -53,9 +53,13 @@ static const comando_t comandos[] = {
     { "cut", "cortar", false, false, "corta colunas", "cut -f LISTA [-d C] [-s] | -c LISTA [arquivo...]", "Mostra só alguns campos (-f, separados por -d; o padrão é Tab) ou colunas (-c) de cada linha. LISTA: 2  1,3  2-4  3-." },
     { "tr", "trocar", false, false, "troca letras", "tr [-cds] CONJUNTO1 [CONJUNTO2]", "Troca as letras do conjunto 1 pelas do 2 (ex.: tr a-z A-Z ou tr [:lower:] [:upper:]). -d apaga, -s junta repetidas, -c usa o complemento." },
     { "seq", "sequencia", false, false, "conta números", "seq [-w] [-s SEP] [primeiro [passo]] último", "Escreve uma sequência de números, um por linha (ex.: seq 5, seq 10 -2 0, seq 0 0.5 2). -w iguala a largura, -s troca o separador." },
-    { "rev", "inverter", false, false, "inverte linhas", "rev [arquivo...]", "Escreve cada linha de trás para a frente (sagui vira iugas)." },
-    { "tac", "de-tras", false, false, "última linha antes", "tac [arquivo...]", "Escreve as linhas na ordem inversa, da última para a primeira." },
+    { "rev", "inverter", false, false, "inverte as letras", "rev [arquivo...]", "Escreve cada linha de trás para a frente (sagui vira iugas)." },
+    { "tac", "de-tras", false, false, "inverte a ordem", "tac [arquivo...]", "Escreve as linhas na ordem inversa, da última para a primeira." },
     { "nl", "numerar", false, false, "numera linhas", "nl [-b a|t] [-n ln|rn|rz] [-w N] [-s SEP] [-v N] [-i N] [arquivo...]", "Numera as linhas com texto (com -b a, todas). -w largura, -s separador, -v primeiro número, -i incremento." },
+    { "diff", "diferencas", false, false, "compara arquivos", "diff [-u] [-q] [-i] [-b] arquivo1 arquivo2", "Mostra as linhas que mudaram de um arquivo para o outro (< saiu, > entrou). -u formato unificado, -q só diz se mudou, -i ignora maiúsculas, -b espaços." },
+    { "find", "procurar-arquivo", false, false, "acha arquivos", "find [pasta...] [-name P] [-iname P] [-type f|d] [-size [+-]N[ck]] [-empty] [-maxdepth N]", "Procura arquivos e pastas, descendo pelas subpastas (ex.: find /usb -name \"*.txt\"). ! inverte a condição seguinte." },
+    { "sed", "editar-fluxo", false, false, "edita texto", "sed [-n] [-E] [-e roteiro]... [roteiro] [arquivo...]", "Edita o texto linha a linha: s/velho/novo/g troca, 3d apaga a linha 3, /^#/d apaga as que começam com #, -n 2,4p mostra só as linhas 2 a 4." },
+    { "tree", "arvore", false, false, "árvore de pastas", "tree [-a] [-d] [-L N] [pasta...]", "Desenha as pastas e os arquivos como uma árvore. -d só pastas, -L N desce até N níveis, -a mostra os escondidos." },
     { "kill", "matar", false, false, "encerra processo", "kill <pid>", "Encerra um processo pelo número (veja os números com ps)." },
     { "clear", "limpar", true, false, "limpa a tela", "clear", "Limpa a tela." },
     { "ajuda", NULL, true, false, "esta ajuda", "ajuda [comando]", "Lista os comandos, ou explica um comando." },
@@ -340,9 +344,9 @@ typedef struct {
 static bool eh_operador(char c) { return c == '|' || c == '<' || c == '>' || c == '&'; }
 
 /* Separa a linha em palavras e operadores (que podem vir colados nas
- * palavras: "ls bin|conta"). Aspas agrupam palavras com espaços; dentro
- * delas, | > < & são texto comum. As palavras são copiadas, sem as aspas,
- * para um armazém à parte. */
+ * palavras: "ls bin|conta"). Aspas (duplas ou simples) agrupam palavras
+ * com espaços; dentro delas, | > < & são texto comum. As palavras são
+ * copiadas, sem as aspas, para um armazém à parte. */
 static char armazem[MAX_LINHA * 2];
 
 static int separar(const char *linha, token_t *t, int max)
@@ -362,10 +366,12 @@ static int separar(const char *linha, token_t *t, int max)
         }
         char *ini = armazem + usado;
         while (*p && *p != ' ' && !eh_operador(*p) && usado < sizeof armazem - 2) {
-            if (*p == '"') {
-                p++;
-                while (*p && *p != '"' && usado < sizeof armazem - 2) armazem[usado++] = *p++;
-                if (*p == '"') p++;
+            if (*p == '"' || *p == '\'') {
+                /* Aspas simples também (H91): é como os roteiros do sed e
+                 * os conjuntos do tr costumam ser escritos ('s/a/b/'). */
+                char aspa = *p++;
+                while (*p && *p != aspa && usado < sizeof armazem - 2) armazem[usado++] = *p++;
+                if (*p == aspa) p++;
             } else {
                 armazem[usado++] = *p++;
             }
