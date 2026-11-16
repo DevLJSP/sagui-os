@@ -222,26 +222,38 @@ registro — uma fonte de verdade só, e o `pci` deixa de mentir.
 
 A ordem de casamento proposta, do mais específico para o menos específico, é:
 
-1. fabricante e modelo exatos combinados com classe e subclasse exatas;
-2. fabricante e modelo exatos, sem exigência de classe;
-3. fabricante com modelo curinga (`0xFFFF`) combinado com classe e subclasse
+1. fabricante e modelo exatos combinados com classe, subclasse e interface
    exatas;
-4. classe, subclasse e interface exatas;
-5. classe e subclasse exatas, sem exigência de interface;
-6. fabricante exato com modelo curinga (`0xFFFF`), sem exigência de classe.
+2. fabricante e modelo exatos combinados com classe e subclasse exatas, sem
+   exigir interface;
+3. fabricante e modelo exatos, sem exigência de classe;
+4. fabricante exato com modelo curinga (`0xFFFF`) combinado com classe,
+   subclasse e interface exatas;
+5. fabricante exato com modelo curinga (`0xFFFF`) combinado com classe e
+   subclasse exatas, sem exigir interface;
+6. classe, subclasse e interface exatas, sem critério de fabricante/modelo;
+7. classe e subclasse exatas, sem exigir interface nem fabricante/modelo;
+8. fabricante exato com modelo curinga (`0xFFFF`), sem exigência de classe.
+
+O bit 2 aparece duas vezes nas categorias combinadas (itens 1 e 4) porque,
+quando a classe já casa, exigir também a interface é um critério mais restrito
+do que aceitar qualquer interface; por isso a variante com interface vem antes
+da variante sem ela.
 
 Quando os bits 0 e 1 estiverem ligados, os dois critérios precisam ser
-verdadeiros: a combinação é E, nunca OU. Dentro da mesma categoria, vence quem
-declarou primeiro; o desempate não depende do nome nem da ordem alfabética do
-driver. Como os embutidos são registrados antes dos pacotes, em empate os
-embutidos conservam a prioridade. O resultado deve ser determinístico e
-aparecer no registro de drivers.
+verdadeiros: a combinação é E, nunca OU. Dentro da mesma categoria, vence o
+driver registrado primeiro; o desempate não depende do nome nem da ordem
+alfabética do driver. Se um mesmo driver declarar várias entradas que casem com
+o dispositivo, elas não viram candidatos independentes: conta só a melhor
+categoria entre elas. Como os embutidos são registrados antes dos pacotes, em
+empate os embutidos conservam a prioridade. O resultado deve ser determinístico
+e aparecer no registro de drivers.
 
 Esta ordenação é uma proposta da RFC e ainda depende de aprovação (seção 11).
-A regra de proteção da v1 continua valendo: como os embutidos rodam antes, um
-pacote só pode assumir um dispositivo que nenhum embutido assumiu nem declarou
-como candidato — não dá para sequestrar o driver de vídeo ou o de rede
-instalando um pacote. Se um embutido declarou suporte e não assumiu, o
+A regra de proteção da v1 é mais forte que a precedência entre pacotes e
+embutidos: um pacote só pode assumir um dispositivo que nenhum embutido assumiu
+nem declarou como candidato — não dá para sequestrar o driver de vídeo ou o de
+rede instalando um pacote. Se um embutido declarou suporte e não assumiu, o
 dispositivo fica com ele (`compativel` e depois `falhou`); o pacote não o
 substitui na v1.
 
@@ -569,11 +581,20 @@ O que a aba mostra:
 ## 11. O que precisa de aprovação
 
 - [ ] A direção geral desta RFC (registro, formato, assinatura, carregador).
-- [ ] A precedência PCI detalhada da seção 4.2: (1) fabricante/modelo exatos
-      com classe/subclasse; (2) fabricante/modelo exatos; (3) fabricante com
-      modelo curinga e classe/subclasse; (4) classe/subclasse/interface;
-      (5) classe/subclasse; (6) fabricante com modelo curinga. Em empate,
-      declaração primeiro; embutidos antes dos pacotes.
+- [ ] A precedência PCI detalhada da seção 4.2, da maior para a menor:
+      (1) fabricante/modelo exatos com classe/subclasse/interface;
+      (2) fabricante/modelo exatos com classe/subclasse, sem interface;
+      (3) fabricante/modelo exatos, sem classe;
+      (4) fabricante exato com modelo curinga (`0xFFFF`) e
+      classe/subclasse/interface;
+      (5) fabricante exato com modelo curinga (`0xFFFF`) e classe/subclasse,
+      sem interface;
+      (6) classe/subclasse/interface;
+      (7) classe/subclasse, sem interface;
+      (8) fabricante com modelo curinga, sem classe.
+      Em empate, vence o driver registrado primeiro; um driver com várias
+      entradas conta só pela melhor categoria; a proteção do embutido é mais
+      forte que a precedência.
 - [ ] Os quatro tipos novos de `INFO_*` (8, 9, 10 e 11), que são ABI mesmo sendo
       aditivos.
 - [ ] O escopo da v1: sem IRQ, sem classes, sem chave de usuário, sem W^X, sem

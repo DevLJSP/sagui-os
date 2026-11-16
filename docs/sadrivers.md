@@ -173,26 +173,40 @@ Regras de casamento, em ordem:
 Precedência entre entradas e drivers, do casamento mais específico para o menos
 específico:
 
-1. fabricante e modelo exatos combinados com classe e subclasse exatas;
-2. fabricante e modelo exatos, sem exigência de classe;
-3. fabricante com modelo curinga (`0xFFFF`) combinado com classe e subclasse
+1. fabricante e modelo exatos combinados com classe, subclasse e interface
    exatas;
-4. classe, subclasse e interface exatas;
-5. classe e subclasse exatas, sem exigência de interface;
-6. fabricante exato com modelo curinga (`0xFFFF`), sem exigência de classe.
+2. fabricante e modelo exatos combinados com classe e subclasse exatas, sem
+   exigir interface;
+3. fabricante e modelo exatos, sem exigência de classe;
+4. fabricante exato com modelo curinga (`0xFFFF`) combinado com classe,
+   subclasse e interface exatas;
+5. fabricante exato com modelo curinga (`0xFFFF`) combinado com classe e
+   subclasse exatas, sem exigir interface;
+6. classe, subclasse e interface exatas, sem critério de fabricante/modelo;
+7. classe e subclasse exatas, sem exigir interface nem fabricante/modelo;
+8. fabricante exato com modelo curinga (`0xFFFF`), sem exigência de classe.
+
+O bit 2 aparece duas vezes nas categorias combinadas (itens 1 e 4) porque,
+quando a classe já casa, exigir também a interface é um critério mais restrito
+do que aceitar qualquer interface; por isso a variante com interface vem antes
+da variante sem ela.
 
 Quando os bits 0 e 1 estiverem ligados, os dois critérios precisam ser
-verdadeiros: a combinação é E, nunca OU. Dentro da mesma categoria, vence quem
-declarou primeiro; não há desempate por nome nem por ordem alfabética. Como os
-embutidos são registrados antes dos pacotes, em empate os embutidos conservam
-a prioridade. O resultado **deve** ser determinístico e aparecer no `drivers`.
+verdadeiros: a combinação é E, nunca OU. Dentro da mesma categoria, vence o
+driver registrado primeiro; não há desempate por nome nem por ordem alfabética.
+Se um mesmo driver declarar várias entradas que casem com o dispositivo, elas
+não viram candidatos independentes: conta só a melhor categoria entre elas.
+Como os embutidos são registrados antes dos pacotes, em empate os embutidos
+conservam a prioridade. O resultado **deve** ser determinístico e aparecer no
+`drivers`.
 
 Esta ordenação é uma proposta da RFC e ainda depende de aprovação; a
 implementação do kernel não existe nesta etapa.
 
-Um pacote só pode tentar assumir um dispositivo que nenhum embutido assumiu
-nem declarou como candidato. Isso vale mesmo quando o embutido declarou suporte
-e não chegou a assumir: o dispositivo fica com ele (`compativel` e depois
+A proteção da v1 é mais forte que a precedência entre pacotes e embutidos: um
+pacote só pode tentar assumir um dispositivo que nenhum embutido assumiu nem
+declarou como candidato. Isso vale mesmo quando o embutido declarou suporte e
+não chegou a assumir: o dispositivo fica com ele (`compativel` e depois
 `falhou`), e o pacote não o substitui na v1. Quando `drivers_carregar()` roda,
 esses dispositivos ainda estão em `detectado`; `sem_driver` não é um estado de
 entrada do carregador, e sim o estado final que `drivers_finalizar()` atribui
