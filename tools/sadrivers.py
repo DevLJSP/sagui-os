@@ -20,10 +20,12 @@ Conhecimento usado, sem código de outro sistema operacional:
   - a especificação do formato em docs/sadrivers.md.
 
 O Ed25519 foi escrito aqui em Python puro para a ferramenta não depender de
-biblioteca externa.  A implementação do kernel é outra (userland/cripto/
-curva25519.c); as duas são conferidas contra os mesmos vetores do RFC 8032.
-O SHA-256/SHA-512 da ferramenta usam hashlib, que faz parte da biblioteca
-padrão do Python; no kernel as rotinas são as do projeto.
+biblioteca externa.  Os cinco vetores positivos da seção 7.1 da RFC 8032
+conferem esta implementação Python.  A implementação do kernel em
+userland/cripto/curva25519.c é independente; a comparação entre as duas ainda
+não foi feita e pertence à H92, que ainda não começou.  O SHA-256/SHA-512 da
+ferramenta usam hashlib, que faz parte da biblioteca padrão do Python; no kernel
+as rotinas são as do projeto.
 
 Uso:
   python3 tools/sadrivers.py embalar --objeto x.o --manifesto x.toml \\

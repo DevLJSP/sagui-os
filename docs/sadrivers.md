@@ -170,16 +170,31 @@ Regras de casamento, em ordem:
 6. Uma entrada **não deve** ter `fabricante` igual a `0xFFFF` (não existe
    fabricante com esse número; curinga só vale para `modelo`).
 
-Precedência entre entradas e drivers:
+Precedência entre entradas e drivers, do casamento mais específico para o menos
+específico:
 
-- fabricante/modelo exato vence classe;
-- entre dois candidatos igualmente específicos, vence o que foi declarado
-  primeiro (a ordem de carga: embutidos antes dos pacotes);
-- o resultado **deve** ser determinístico e aparecer no `drivers`.
+1. fabricante e modelo exatos combinados com classe e subclasse exatas;
+2. fabricante e modelo exatos, sem exigência de classe;
+3. fabricante com modelo curinga (`0xFFFF`) combinado com classe e subclasse
+   exatas;
+4. classe, subclasse e interface exatas;
+5. classe e subclasse exatas, sem exigência de interface;
+6. fabricante exato com modelo curinga (`0xFFFF`), sem exigência de classe.
+
+Quando os bits 0 e 1 estiverem ligados, os dois critérios precisam ser
+verdadeiros: a combinação é E, nunca OU. Dentro da mesma categoria, vence quem
+declarou primeiro; não há desempate por nome nem por ordem alfabética. Como os
+embutidos são registrados antes dos pacotes, em empate os embutidos conservam
+a prioridade. O resultado **deve** ser determinístico e aparecer no `drivers`.
+
+Esta ordenação é uma proposta da RFC e ainda depende de aprovação; a
+implementação do kernel não existe nesta etapa.
 
 Um pacote só pode tentar assumir um dispositivo que nenhum embutido assumiu
-nem declarou como candidato. Quando `drivers_carregar()` roda, esses
-dispositivos ainda estão em `detectado`; `sem_driver` não é um estado de
+nem declarou como candidato. Isso vale mesmo quando o embutido declarou suporte
+e não chegou a assumir: o dispositivo fica com ele (`compativel` e depois
+`falhou`), e o pacote não o substitui na v1. Quando `drivers_carregar()` roda,
+esses dispositivos ainda estão em `detectado`; `sem_driver` não é um estado de
 entrada do carregador, e sim o estado final que `drivers_finalizar()` atribui
 aos que continuarem sem associação. O carregador trata `detectado` como
 disponível e não disputa `compativel` nem `falhou`, que pertencem a um
@@ -249,11 +264,12 @@ de funções e os dados daquele dispositivo. A função devolve:
 | `-2` | Tentei e o hardware falhou. |
 | outro negativo | Reservado; o número vai para o motivo na tela. |
 
-O retorno vira o estado do **dispositivo**, não o destino do pacote: `-1` deixa
-o dispositivo `sem_driver`, `-2` o deixa `falhou` com o motivo. O módulo
-continua carregado e pode assumir outros dispositivos dele. O carregador escolhe
-**um** driver por dispositivo, o primeiro na ordem de precedência da seção 4; se
-ele recusar, nenhum outro é tentado na v1.
+O retorno vira o estado do **dispositivo**, não o destino do pacote: `-1` não
+associa o dispositivo, que continua `detectado` até `drivers_finalizar()`; `-2`
+o deixa `falhou` com o motivo. O módulo continua carregado e pode assumir outros
+dispositivos dele. O carregador escolhe **um** driver por dispositivo, o
+primeiro na ordem de precedência da seção 4; se ele recusar, nenhum outro é
+tentado na v1.
 
 A entrada roda na pilha do kernel, em contexto de boot, com interrupções
 ligadas. Ela **não deve** bloquear para sempre nem desligar interrupções por

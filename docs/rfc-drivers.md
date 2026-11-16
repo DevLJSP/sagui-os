@@ -115,8 +115,8 @@ Estados do **dispositivo**:
 
 | Estado | Significado |
 | --- | --- |
-| `detectado` | Enumerado, ainda sem passar pelo casamento. |
-| `sem_driver` | Nenhum driver declarou suportar este dispositivo. |
+| `detectado` | Enumerado e sem associação; ainda pode ser disputado pelo casamento. |
+| `sem_driver` | Nenhum driver assumiu; o dispositivo permaneceu sem associação. |
 | `compativel` | Algum driver declarou suporte, mas ainda não assumiu. |
 | `ativo` | Um driver assumiu e a inicialização terminou bem. |
 | `falhou` | Um driver tentou, falhou, e o motivo está guardado. |
@@ -220,12 +220,30 @@ quando um passo falha, chama `drivers_falhou_pci()` com um motivo curto. O
 `pci_relatorio()` deixa de ter a tabela `suporte()` e passa a perguntar ao
 registro — uma fonte de verdade só, e o `pci` deixa de mentir.
 
-A ordem de casamento é: fabricante/modelo exato vence classe; entre dois
-drivers, vence o que declarou primeiro. Como os embutidos rodam antes, um
-pacote só assume o que nenhum embutido assumiu — não dá para sequestrar o
-driver de vídeo ou o de rede instalando um pacote. Se um embutido declarou
-suporte e não assumiu, o dispositivo fica com ele (`compativel` e depois
-`falhou`); o pacote não o substitui na v1.
+A ordem de casamento proposta, do mais específico para o menos específico, é:
+
+1. fabricante e modelo exatos combinados com classe e subclasse exatas;
+2. fabricante e modelo exatos, sem exigência de classe;
+3. fabricante com modelo curinga (`0xFFFF`) combinado com classe e subclasse
+   exatas;
+4. classe, subclasse e interface exatas;
+5. classe e subclasse exatas, sem exigência de interface;
+6. fabricante exato com modelo curinga (`0xFFFF`), sem exigência de classe.
+
+Quando os bits 0 e 1 estiverem ligados, os dois critérios precisam ser
+verdadeiros: a combinação é E, nunca OU. Dentro da mesma categoria, vence quem
+declarou primeiro; o desempate não depende do nome nem da ordem alfabética do
+driver. Como os embutidos são registrados antes dos pacotes, em empate os
+embutidos conservam a prioridade. O resultado deve ser determinístico e
+aparecer no registro de drivers.
+
+Esta ordenação é uma proposta da RFC e ainda depende de aprovação (seção 11).
+A regra de proteção da v1 continua valendo: como os embutidos rodam antes, um
+pacote só pode assumir um dispositivo que nenhum embutido assumiu nem declarou
+como candidato — não dá para sequestrar o driver de vídeo ou o de rede
+instalando um pacote. Se um embutido declarou suporte e não assumiu, o
+dispositivo fica com ele (`compativel` e depois `falhou`); o pacote não o
+substitui na v1.
 
 ## 5. Onde isso entra no boot
 
@@ -238,13 +256,14 @@ A ordem do boot é delicada (D010, D020). A proposta mexe o mínimo:
 | `hda_iniciar()` | Registra-se, declara suporte, assume ou falha. |
 | `rede_iniciar()` | Idem para o `e1000`. |
 | `video_nativo_tentar()` | Idem para o vídeo nativo. |
-| depois dos embutidos | `drivers_carregar()`: lê `/usb/.saguios/drivers/ativo.txt`, verifica e carrega os pacotes. Sem pendrive, não faz nada. Pacote só assume dispositivo que nenhum embutido assumiu (o que ficaria `sem_driver`): embutido tem prioridade. |
+| depois dos embutidos | `drivers_carregar()`: lê `/usb/.saguios/drivers/ativo.txt`, verifica e carrega os pacotes. Sem pendrive, não faz nada. Roda antes de `drivers_finalizar()`; os dispositivos sem candidato embutido ainda estão `detectado`. O pacote só pode assumir dispositivo que nenhum embutido assumiu nem declarou como candidato. |
 | fim do boot | `drivers_finalizar()`: o que ficou `compativel` vira `falhou` com o motivo "o driver não assumiu"; o que ficou `detectado` vira `sem_driver`; o resumo é congelado para a consulta. |
 
-Detalhe de ordem: quando `drivers_carregar()` roda, os dispositivos sem
-candidato ainda estão `detectado` (o `sem_driver` só é carimbado no fim). O
-carregador trata `detectado` como disponível; `compativel` e `falhou` pertencem
-a um embutido e não são disputados.
+Detalhe de ordem: `drivers_carregar()` roda antes de `drivers_finalizar()`.
+Nesse momento, os dispositivos sem candidato ainda estão `detectado`; o
+`sem_driver` só é atribuído por `drivers_finalizar()` aos que permanecerem sem
+associação. O carregador trata `detectado` como disponível; `compativel` e
+`falhou` pertencem a um embutido e não são disputados.
 
 O ganho colateral é medível: hoje o PCI é varrido quatro vezes; passa a ser
 varrido uma. A estimativa é de algumas dezenas de milissegundos a menos no
@@ -550,6 +569,11 @@ O que a aba mostra:
 ## 11. O que precisa de aprovação
 
 - [ ] A direção geral desta RFC (registro, formato, assinatura, carregador).
+- [ ] A precedência PCI detalhada da seção 4.2: (1) fabricante/modelo exatos
+      com classe/subclasse; (2) fabricante/modelo exatos; (3) fabricante com
+      modelo curinga e classe/subclasse; (4) classe/subclasse/interface;
+      (5) classe/subclasse; (6) fabricante com modelo curinga. Em empate,
+      declaração primeiro; embutidos antes dos pacotes.
 - [ ] Os quatro tipos novos de `INFO_*` (8, 9, 10 e 11), que são ABI mesmo sendo
       aditivos.
 - [ ] O escopo da v1: sem IRQ, sem classes, sem chave de usuário, sem W^X, sem
@@ -574,7 +598,7 @@ O que a aba mostra:
 | A aba virar promessa de "instalar" antes da hora | Médio | Primeiro só consulta; os botões entram com a API pronta e teste. |
 | Varredura do PCI ficar mais lenta | Baixo | Enumeração única; medir no teste com `SIS_TEMPO`. |
 | Pacote assinado mas com ABI errada | Baixo | Campo de ABI no cabeçalho; o carregador recusa antes de carregar. |
-| Driver embutido e pacote disputarem o mesmo dispositivo | Baixo | Embutido tem prioridade (roda antes); o pacote só pega o que ficou `sem_driver`, e isso aparece no `drivers`. |
+| Driver embutido e pacote disputarem o mesmo dispositivo | Baixo | Embutido tem prioridade (roda antes); o pacote só pode tentar o que nenhum embutido assumiu nem declarou, e isso aparece no `drivers`. |
 
 ## 13. Divisão em pull requests
 
