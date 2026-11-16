@@ -129,7 +129,8 @@ def compilar_referencia(saida, opcoes=("-O2",)):
 def testar_enderecos():
     programa = os.path.join(SAIDA, "h62-teste_enderecos")
     r = subprocess.run(["gcc", "-m32", "-O1", "-g", "-fsanitize=address,undefined", "-Wall", "-Wextra", "-Werror",
-                        "-Wno-format-truncation", "-I", os.path.join(RAIZ, "tests", "navegador", "simulado"), "-o", programa,
+                        "-Wno-format-truncation", "-I", os.path.join(RAIZ, "tests", "navegador", "simulado"),
+                        "-I", os.path.join(RAIZ, "userland", "inc"), "-o", programa,
                         os.path.join(RAIZ, "tests", "navegador", "teste_enderecos.c"),
                         os.path.join(RAIZ, "userland", "navegador", "enderecos.c")], capture_output=True, text=True)
     if r.returncode != 0:
