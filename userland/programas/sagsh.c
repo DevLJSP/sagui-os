@@ -66,6 +66,7 @@ static const comando_t comandos[] = {
     { "usb", NULL, false, false, "diagnóstico USB", "usb", "Mostra os controladores USB 2.0, as portas e os dispositivos." },
     { "pci", NULL, false, false, "lista o hardware", "pci", "Lista os dispositivos PCI (rede, som, USB, vídeo) e o que o SaguiOS já usa." },
     { "config", NULL, false, false, "configurações", "config [chave [valor]]", "Lê ou muda uma configuração do sistema (guardada no pendrive)." },
+    { "teclado", NULL, false, false, "layout do teclado", "teclado [es | abnt2]", "Mostra ou troca o layout do teclado: abnt2 (português do Brasil) ou es (espanhol). Fica guardado nas configurações." },
     { "som", NULL, false, false, "placa de som", "som [teste [Hz [ms]] | volume [0-100]]", "Mostra a placa de som, toca um tom de teste ou muda o volume." },
     { "tocar", NULL, false, false, "toca um .wav", "tocar arquivo.wav", "Toca um arquivo WAV (PCM de 8 ou 16 bits) pela placa de som." },
     { "rede", NULL, false, false, "mostra a rede", "rede", "Mostra a placa de rede, o endereço IP, o roteador e o DNS." },
