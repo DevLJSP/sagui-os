@@ -45,6 +45,12 @@ static const comando_t comandos[] = {
     { "ps", "processos", false, false, "lista processos", "ps", "Mostra os processos em execução: PID, pai, estado, memória e tempo de CPU." },
     { "top", "monitor", false, false, "processos ao vivo", "top [-n vezes]", "Mostra os processos, a memória e a %CPU de cada um, atualizando a cada segundo. q sai." },
     { "grep", "procurar", false, false, "procura texto", "grep [-i] [-n] [-v] [-c] <texto> [arquivo...]", "Mostra as linhas que contêm o texto (ex.: ls bin | grep a). -i ignora maiúsculas, -n numera, -v inverte, -c conta." },
+    /* Utilitários de texto (H91, do fork SaguiOS-Extended do Alejandro Anuncibay). */
+    { "head", "inicio", false, false, "começo do texto", "head [-n N | -N] [-c N] [-q | -v] [arquivo...]", "Mostra as primeiras linhas (10, ou N com -n) de arquivos ou da entrada (ex.: ls bin | head -3). -c conta bytes." },
+    { "tail", "fim", false, false, "fim do texto", "tail [-n [+]N] [-c [+]N] [-f] [arquivo...]", "Mostra as últimas linhas (10, ou N com -n); com +N, da linha N em diante. -f continua mostrando o que for acrescentado." },
+    { "sort", "ordenar", false, false, "ordena linhas", "sort [-rnufbc] [-k N[,M]] [-t C] [-o arquivo] [arquivo...]", "Ordena as linhas. -r inverte, -n compara números, -u tira repetidas, -f ignora maiúsculas, -k ordena pelo campo N, -t escolhe o separador." },
+    { "uniq", "unicos", false, false, "junta repetidas", "uniq [-c] [-d | -u] [-i] [-f N] [entrada [saída]]", "Junta linhas repetidas seguidas (use depois do sort). -c conta, -d só as repetidas, -u só as únicas, -i ignora maiúsculas." },
+    { "cut", "cortar", false, false, "corta colunas", "cut -f LISTA [-d C] [-s] | -c LISTA [arquivo...]", "Mostra só alguns campos (-f, separados por -d; o padrão é Tab) ou colunas (-c) de cada linha. LISTA: 2  1,3  2-4  3-." },
     { "kill", "matar", false, false, "encerra processo", "kill <pid>", "Encerra um processo pelo número (veja os números com ps)." },
     { "clear", "limpar", true, false, "limpa a tela", "clear", "Limpa a tela." },
     { "ajuda", NULL, true, false, "esta ajuda", "ajuda [comando]", "Lista os comandos, ou explica um comando." },
