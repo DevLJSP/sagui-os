@@ -11,6 +11,32 @@
 /* (A guarda deixa os testes no computador usarem um sagui.h simulado.) */
 #ifndef SAGUI_H
 #include "sagui.h"
+/* ---- apoio ao tar e ao zip (apoio_arquivos.c) ---- */
+
+/* Junta o nome guardado num pacote à pasta de destino, com segurança: as
+ * barras invertidas viram '/', "." some, e nomes absolutos ("/x") ou com
+ * ".." são RECUSADOS (false). Sem isso, um pacote malicioso poderia
+ * gravar fora da pasta escolhida ("zip slip"; travessia de caminho). */
+bool caminho_seguro(const char *nome, const char *destino, char *saida, int max);
+/* Cria a pasta e as que faltarem no caminho até ela ("mkdir -p"). */
+int criar_pastas(const char *caminho);
+/* Cria as pastas que faltam antes do último nome do caminho. */
+int criar_pastas_ate(const char *caminho);
+/* Nomes de arquivo: os do SaguiOS são Latin-1; dentro dos pacotes vão em
+ * UTF-8. Na volta, o que não existe em Latin-1 vira '_'. Devolvem o
+ * tamanho, ou -1 se não couber. */
+int nome_latin1_para_utf8(const char *src, char *dst, int max);
+int nome_utf8_para_latin1(const char *src, int n, char *dst, int max);
+bool nome_ascii(const char *s);
+/* Percorre um arquivo ou uma pasta (com tudo o que tem dentro, pastas
+ * antes do conteúdo). real é o caminho no disco; nome, o caminho como vai
+ * para o pacote. A função recebe também o tipo (TIPO_*) e o tamanho. */
+typedef int (*percorrer_fn)(const char *real, const char *nome, int tipo, uint32_t tamanho, void *ctx);
+int percorrer(const char *real, const char *nome, percorrer_fn fn, void *ctx);
+bool existe_arquivo(const char *caminho);
+/* Grava um arquivo inteiro (cria ou substitui). */
+int gravar_arquivo_inteiro(const char *caminho, const void *dados, uint32_t n);
+
 #endif
 
 #define COMP_ERRO_DADOS    -101   /* os dados compactados estão errados */
@@ -55,5 +81,31 @@ int gzip_compactar(const uint8_t *dados, uint32_t n, const char *nome, uint32_t 
  * o tamanho de cada um. nome (pode ser NULL) recebe o nome original. */
 int gzip_descompactar(const uint8_t *dados, uint32_t n, uint8_t **saida, char *nome, int max_nome);
 bool eh_gzip(const uint8_t *dados, uint32_t n);
+
+/* ---- apoio ao tar e ao zip (apoio_arquivos.c) ---- */
+
+/* Junta o nome guardado num pacote à pasta de destino, com segurança: as
+ * barras invertidas viram '/', "." some, e nomes absolutos ("/x") ou com
+ * ".." são RECUSADOS (false). Sem isso, um pacote malicioso poderia
+ * gravar fora da pasta escolhida ("zip slip"; travessia de caminho). */
+bool caminho_seguro(const char *nome, const char *destino, char *saida, int max);
+/* Cria a pasta e as que faltarem no caminho até ela ("mkdir -p"). */
+int criar_pastas(const char *caminho);
+/* Cria as pastas que faltam antes do último nome do caminho. */
+int criar_pastas_ate(const char *caminho);
+/* Nomes de arquivo: os do SaguiOS são Latin-1; dentro dos pacotes vão em
+ * UTF-8. Na volta, o que não existe em Latin-1 vira '_'. Devolvem o
+ * tamanho, ou -1 se não couber. */
+int nome_latin1_para_utf8(const char *src, char *dst, int max);
+int nome_utf8_para_latin1(const char *src, int n, char *dst, int max);
+bool nome_ascii(const char *s);
+/* Percorre um arquivo ou uma pasta (com tudo o que tem dentro, pastas
+ * antes do conteúdo). real é o caminho no disco; nome, o caminho como vai
+ * para o pacote. A função recebe também o tipo (TIPO_*) e o tamanho. */
+typedef int (*percorrer_fn)(const char *real, const char *nome, int tipo, uint32_t tamanho, void *ctx);
+int percorrer(const char *real, const char *nome, percorrer_fn fn, void *ctx);
+bool existe_arquivo(const char *caminho);
+/* Grava um arquivo inteiro (cria ou substitui). */
+int gravar_arquivo_inteiro(const char *caminho, const void *dados, uint32_t n);
 
 #endif
