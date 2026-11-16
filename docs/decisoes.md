@@ -1668,7 +1668,7 @@ janela estiver aberta, e a janela avisa. O gasto total de todas as conversas
 fica nas configurações (`saguicode.gasto_total`, em milionésimos de dólar).
 A chave continua só em `chaves.txt`.
 
-## D051. Os jogos do fork de Alejandro: menu "Jogos" e uma pasta por jogo (H92)
+## D053. Os jogos do fork de Alejandro: menu "Jogos" e uma pasta por jogo (H92)
 
 O fork SaguiOS-Extended de Alejandro Anuncibay (GPL 2 "ou posterior",
 compatível com a GPL 3) partiu da versão 1.0 e tem uma libsagui bem maior que
