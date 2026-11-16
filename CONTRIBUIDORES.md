@@ -22,8 +22,9 @@
   trazidos na H81 e na H83).
 - **M4R4G0N** ([@M4R4G0N](https://github.com/M4R4G0N)): o nome "Cipó" para o navegador e
   a ideia da página inicial com sites que funcionam sem HTTPS (pull request #3; H82 e H83).
-- **Alejandro Anuncibay**: a pergunta sobre adaptar o SaguiOS para o espanhol (issue #5),
-  que levou às regras de contribuição; os jogos do fork SaguiOS-Extended (o buscaminas, o
-  spider, o emulador de CHIP-8 com o montador e o visor de JClic), reescritos sobre o
-  `main` atual como Caça-Bananas, Paciência Banana, CHIP-8 e Atividades JClic (H92, D051).
+- **Alejandro Anuncibay** ([@aleanun89](https://github.com/aleanun89)): a pergunta sobre
+  adaptar o SaguiOS para o espanhol (issue #5), que levou às regras de contribuição, e o
+  fork SaguiOS-Extended, de onde vieram o layout espanhol do teclado (H90), os comandos de
+  terminal (H91), os jogos, reescritos como Caça-Bananas, Paciência Banana, CHIP-8 e
+  Atividades JClic (H92), e os programas gzip, tar e zip (H93).
 

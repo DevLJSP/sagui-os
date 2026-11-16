@@ -1668,6 +1668,25 @@ janela estiver aberta, e a janela avisa. O gasto total de todas as conversas
 fica nas configurações (`saguicode.gasto_total`, em milionésimos de dólar).
 A chave continua só em `chaves.txt`.
 
+## D051. Layout do teclado escolhido pelas configurações (H90)
+
+O teclado ganhou o layout espanhol (ES, teclado ISO de 105 teclas), além do
+ABNT2, trazido do fork SaguiOS-Extended de Alejandro Anuncibay e reescrito
+sobre o driver atual. No fork a troca era uma chamada de sistema nova; aqui
+ela é a configuração `teclado.layout` (`abnt2`, o padrão, ou `es`), para não
+mudar a ABI das chamadas de sistema e para a escolha ficar guardada no
+pendrive como as outras.
+
+O driver confere `config_geracao()` a cada tecla apertada (dentro da
+interrupção; `config_obter` só percorre uma tabela na memória) e relê a
+chave quando ela mudou, como o misturador faz com o volume. O comando
+`teclado [es | abnt2]` e a aba "Teclado" das Configurações só gravam a
+configuração. Os códigos de varredura são os mesmos nos dois layouts (o
+código diz a posição física da tecla); muda só a tabela de caracteres, o
+AltGr e a tecla Del do teclado numérico (ponto no ES). O euro do AltGr+E não
+existe no Latin-1 e ficou de fora. O ~ do AltGr+4 é tecla morta, como no
+ABNT2: ~ + espaço dá o próprio ~.
+
 ## D053. Os jogos do fork de Alejandro: menu "Jogos" e uma pasta por jogo (H92)
 
 O fork SaguiOS-Extended de Alejandro Anuncibay (GPL 2 "ou posterior",

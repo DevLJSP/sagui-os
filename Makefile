@@ -64,7 +64,10 @@ CRIPTO_OBJ := $(patsubst userland/%.c,$(B)/userland/%.o,$(wildcard userland/crip
 LIBSAGUI_OBJ := $(CRIPTO_OBJ) $(B)/userland/fonte8x16.o \
                 $(patsubst userland/libsagui/%.c,$(B)/userland/libsagui/%.o,$(wildcard userland/libsagui/*.c)) \
                 $(patsubst userland/libsagui/%.asm,$(B)/userland/libsagui/%.asm.o,$(wildcard userland/libsagui/*.asm))
-USER_HDR  := $(wildcard userland/inc/*.h) $(wildcard userland/cripto/*.h) $(wildcard userland/tls/*.h) $(wildcard userland/ssh/*.h) kernel/inc/abi.h
+# (userland/programas/*.h: código dividido entre dois programas, como o motor
+# de expressões do sed e do expr, H91.)
+USER_HDR  := $(wildcard userland/inc/*.h) $(wildcard userland/cripto/*.h) $(wildcard userland/tls/*.h) $(wildcard userland/ssh/*.h) \
+            $(wildcard userland/programas/*.h) kernel/inc/abi.h
 PROGRAMAS := $(patsubst userland/programas/%.c,$(B)/userland/bin/%,$(wildcard userland/programas/*.c))
 # O Sagui 3D (B4) tem vários arquivos, numa pasta própria.
 SAGUI3D_OBJ := $(patsubst userland/sagui3d/%.c,$(B)/userland/sagui3d/%.o,$(wildcard userland/sagui3d/*.c))
