@@ -166,6 +166,17 @@ $(B)/userland/bin/%: $(B)/userland/programas/%.o $(LIBSAGUI_OBJ) userland/progra
 	$(LD) $(ULDFLAGS) -o $@.elf $< $(LIBSAGUI_OBJ)
 	objcopy --strip-all $@.elf $@
 
+# O lançador de jogos (H92) mostra os mesmos ícones da área de trabalho: o C
+# gerado por tools/mkarte.py entra nele (só os ícones usados, --gc-sections).
+$(B)/userland/arte_icones.o: $(B)/gerado/arte_icones.c kernel/inc/arte.h
+	@mkdir -p $(dir $@)
+	$(CC) $(UCFLAGS) -c -o $@ $<
+
+$(B)/userland/bin/jogos: $(B)/userland/programas/jogos.o $(B)/userland/arte_icones.o $(LIBSAGUI_OBJ) userland/programa.ld
+	@mkdir -p $(dir $@)
+	$(LD) $(ULDFLAGS) -o $@.elf $< $(B)/userland/arte_icones.o $(LIBSAGUI_OBJ)
+	objcopy --strip-all $@.elf $@
+
 $(B)/userland/sagui3d/%.o: userland/sagui3d/%.c userland/sagui3d/jogo.h $(USER_HDR)
 	@mkdir -p $(dir $@)
 	$(CC) $(UCFLAGS) -c -o $@ $<

@@ -251,7 +251,9 @@ static const uint32_t *px_de(const char *processo)
     static const struct { const char *p; const uint32_t *px; } t[] = {
         { "calculadora", arte_px_calculadora_40 }, { "banana", arte_px_banana_40 }, { "sagui3d", arte_px_sagui3d_40 },
         { "sobre-o-sistema", arte_px_sobre_40 }, { "energia", arte_px_sobre_40 }, { "cipo", arte_px_cipo_40 }, { "tocador", arte_px_tocador_40 },
-        { "saguicode-janela", arte_px_saguicode_40 },
+        { "saguicode-janela", arte_px_saguicode_40 }, { "jogos", arte_px_jogos_40 },
+        { "cacabananas", arte_px_cacabananas_40 }, { "paciencia", arte_px_paciencia_40 }, { "chip8", arte_px_chip8_40 },
+        { "jclic", arte_px_jclic_40 },
     };
     for (unsigned i = 0; i < sizeof t / sizeof t[0]; i++) if (txt_compara(t[i].p, processo) == 0) return t[i].px;
     return arte_px_instalado_40;
@@ -336,8 +338,8 @@ static void desenhar_doca(void)
 static const fixo_t menu_itens[] = {
     { "Arquivos", "/bin/arquivos", "", 0 }, { "Terminal", "/bin/terminal", "", 0 },
     { "Cipó", "/bin/navegador", "", 0 }, { "Editor", "/bin/editor", "", 0 },
-    { "Calculadora", "/bin/calculadora", "", 0 }, { "Banana", "/bin/banana", "", 0 },
-    { "Sagui 3D", "/bin/sagui3d", "", 0 }, { "Tocador", "/bin/tocador", "", 0 },
+    { "Calculadora", "/bin/calculadora", "", 0 }, { "Jogos", "/bin/jogos", "", 0 },
+    { "Tocador", "/bin/tocador", "", 0 },
     { "Sagui Code", "/bin/saguicode-janela", "", 0 }, { "Sagui Code (terminal)", "/bin/terminal -e /bin/saguicode", "", 0 },
     { "Configurações", "/bin/configuracoes", "", 0 },
     { "Sobre o SaguiOS", "/bin/sobre-o-sistema", "", 0 }, { "Desligar...", "/bin/energia", "", 0 },
