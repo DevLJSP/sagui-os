@@ -877,7 +877,9 @@ def validar_dispositivo(d: Dispositivo) -> None:
             raise ErroSadrivers("CAMPO", f"{campo} do dispositivo fora de 0..255")
     if not 0 <= d.fabricante <= 0xFFFF or not 0 <= d.modelo <= 0xFFFF:
         raise ErroSadrivers("CAMPO", "fabricante/modelo do dispositivo fora de 0..65535")
-    if (d.bandeiras & 0x02) and d.fabricante == 0xFFFF:
+    if d.fabricante == 0xFFFF:
+        # O campo é sempre fabricante, mesmo quando o bit 1 está desligado;
+        # 0xFFFF não é um número PCI-SIG válido.  O curinga é só o modelo.
         raise ErroSadrivers("CAMPO", "fabricante 0xFFFF não existe; use modelo 0xFFFF como curinga")
 
 

@@ -672,6 +672,15 @@ class TesteManifesto(unittest.TestCase):
         with self.assertRaises(sadrv.ErroSadrivers):
             sadrv.ler_manifesto(struct.pack("<HH", 11, 0))
 
+    def test_fabricante_curinga_sem_bit_de_fabricante(self):
+        # O campo fabricante continua sendo fabricante mesmo quando o bit 1
+        # está desligado; 0xFFFF não é um número PCI-SIG válido.
+        d = sadrv.Dispositivo(bandeiras=0x01, classe=0x01, subclasse=0x06,
+                              fabricante=0xFFFF)
+        with self.assertRaises(sadrv.ErroSadrivers) as ctx:
+            sadrv.validar_dispositivo(d)
+        self.assertEqual(ctx.exception.codigo, "CAMPO")
+
     def test_tlv_truncado(self):
         with self.assertRaises(sadrv.ErroSadrivers):
             sadrv.ler_manifesto(b"\x01\x00\x05\x00abc")
