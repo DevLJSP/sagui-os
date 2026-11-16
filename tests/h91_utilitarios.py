@@ -24,7 +24,8 @@ CAMPOS = "a:b:c\nd:e:f\nsem\n1:2:3:4\n"
 
 NOMES = ("head/inicio", "tail/fim", "sort/ordenar", "uniq/unicos", "cut/cortar",
          "tr/trocar", "seq/sequencia", "rev/inverter", "tac/de-tras", "nl/numerar",
-         "diff/diferencas", "find/procurar-arquivo", "sed/editar-fluxo", "tree/arvore")
+         "diff/diferencas", "find/procurar-arquivo", "sed/editar-fluxo", "tree/arvore",
+         "cal/calendario", "bc/calcular", "expr/expressao", "base64", "md5sum/md5", "od/octal", "xxd/hexa")
 
 VELHO = "um\ndois\ntres\nquatro\ncinco\nseis\nsete\noito\nnove\ndez\nonze\ndoze\n"
 NOVO = "um\nDOIS\ntres\nquatro\ncinco\nseis\nsete\noito\nnove\nnovo\ndez\nonze\n"
@@ -34,6 +35,9 @@ ARQUIVOS = {
     "numeros.txt": NUMEROS,
     "campos.txt": CAMPOS,
     "velho.txt": VELHO,
+    # O ^ é uma tecla morta no teclado ABNT2 (o QEMU não o digita sozinho):
+    # as contas com potência ficam num arquivo.
+    "contas.bc": "2^100\nx=0.1; x+0.2; -2^2; 7%3\nquit\n5\n",
     "novo.txt": NOVO,
     "arv/a.txt": "",
     "arv/sub1/b.txt": "bb\n",
@@ -88,6 +92,7 @@ def main():
         lote1(m)
         lote2(m)
         lote3(m)
+        lote4(m)
     return 0
 
 
@@ -211,6 +216,61 @@ def lote3(m):
     m.comando("limpar")
     m.comando("tree arv")
     m.captura("H91-3-diff-find-sed-tree")
+
+
+def lote4(m):
+    """cal, bc, expr, base64, md5sum, od e xxd."""
+    # ---- cal
+    confere(m, "cal 2 2028", "   fevereiro 2028\ndo se te qu qu se sá\n       1  2  3  4  5\n 6  7  8  9 10 11 12\n"
+            "13 14 15 16 17 18 19\n20 21 22 23 24 25 26\n27 28 29\n\n", "cal")
+    out = rodar(m, "calendario 2027 | head -4")
+    verificar("2027" in out and "janeiro" in out and "março" in out and "do se te qu qu se sá  do se" in out,
+              "cal 2027: o ano, três meses por linha")
+    out = rodar(m, "cal")
+    verificar("do se te qu qu se sá" in out and codigo(m, "cal") == 0, "cal sem argumentos: o mês de hoje")
+    rodar(m, "cal 13 2020")
+    verificar(codigo(m, "cal") == 1, "cal com mês 13: código 1")
+
+    # ---- bc
+    confere(m, "bc contas.bc", "1267650600228229401496703205376\n0.3\n4\n1\n", "bc")
+    confere(m, "echo \"scale=3; 10/3\" | calcular", "3.333\n")
+    confere(m, "echo \"0.1 + 0.2 == 0.3\" | bc", "1\n")
+    confere(m, "bc -l -e \"sqrt(2)\"", "1.41421356237309504880\n")
+    confere(m, "bc -e \"123456789012345678901234567890/7\"", "17636684144620811271604938270\n")
+    out = rodar(m, "echo 1/0 | bc")
+    verificar("divisão por zero" in out and codigo(m, "bc") == 1, "bc: divisão por zero avisa e devolve 1")
+
+    # ---- expr
+    confere(m, "expr 3 + 4 * 2", "11\n", "expr")
+    confere(m, "expressao 7 / 2", "3\n")
+    confere(m, "expr 2 \"<\" 10", "1\n")
+    confere(m, "expr sagui : \"sa.*\"", "5\n")
+    confere(m, "expr substr sagui 2 3", "agu\n")
+    confere(m, "expr 3 - 3", "0\n", "expr", 1)
+    rodar(m, "expr 1 / 0")
+    verificar(codigo(m, "expr") == 2, "expr 1 / 0: código 2")
+
+    # ---- base64 e md5sum
+    confere(m, "echo \"Ola, sagui!\" | base64", "T2xhLCBzYWd1aSEK\n", "base64")
+    confere(m, "echo T2xhIQ== | base64 -d", "Ola!")
+    confere(m, "echo abc | md5sum", "0bee89b07a248e27c83fc3d5951213c1  -\n", "md5sum")
+    confere(m, "md5 numeros.txt", "6f2fa9e82daa9b4e597ec0136a66fef6  numeros.txt\n")
+    confere(m, "base64 numeros.txt | base64 -d | md5sum", "6f2fa9e82daa9b4e597ec0136a66fef6  -\n")
+    m.comando("md5sum numeros.txt campos.txt > /tmp/lista.md5")
+    confere(m, "md5sum -c /tmp/lista.md5", "numeros.txt: OK\ncampos.txt: OK\n", "md5sum", 0)
+
+    # ---- od e xxd
+    confere(m, "echo ABC | od -c", "0000000   A   B   C  \\n\n0000004\n", "od")
+    confere(m, "octal -An -tx1 campos.txt | head -1", " 61 3a 62 3a 63 0a 64 3a 65 3a 66 0a 73 65 6d 0a\n")
+    confere(m, "echo \"Ola, sagui!\" | xxd",
+            "00000000: 4f6c 612c 2073 6167 7569 210a            Ola, sagui!.\n", "xxd")
+    confere(m, "hexa -p campos.txt", "613a623a630a643a653a660a73656d0a313a323a333a340a\n")
+    confere(m, "xxd campos.txt | xxd -r | md5sum", rodar(m, "md5sum - < campos.txt"))
+    m.comando("limpar")
+    m.comando("cal 2 2028")
+    m.comando("echo \"scale=20; 1/7\" | bc")
+    m.comando("echo \"Ola, sagui!\" | xxd")
+    m.captura("H91-4-cal-bc-expr-base64-md5-od-xxd")
 
 
 if __name__ == "__main__":
