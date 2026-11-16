@@ -84,6 +84,7 @@ static const comando_t comandos[] = {
     { "cacabananas", NULL, false, true, "ache as bombas", "cacabananas [--nivel 1|2|3]", "Abre o Caça-Bananas: ache as bananas-bomba do bananal." },
     { "paciencia", NULL, false, true, "jogo de cartas", "paciencia [--naipes 1|2|4]", "Abre a Paciência Banana: junte as cartas do rei ao ás." },
     { "chip8", NULL, false, true, "emulador CHIP-8", "chip8 [-m chip8|schip|xochip] [rom]", "Abre o emulador de CHIP-8 (sem ROM, mostra a lista de /jogos/chip8 e do pendrive)." },
+    { "jclic", NULL, false, true, "atividades JClic", "jclic [projeto.jclic.zip]", "Abre o visor de atividades JClic (sem projeto, mostra a lista de /jogos/jclic e do pendrive)." },
     { "chip8asm", NULL, false, false, "montador CHIP-8", "chip8asm fonte.asm [-o saida.ch8]", "Monta um programa de CHIP-8 escrito em texto (exemplos em /jogos/chip8)." },
     { "triangulos", NULL, false, true, "teste de desenho", "triangulos", "Triângulos girando em 3D, com os quadros por segundo: mede a velocidade do desenho. +/- muda a quantidade." },
     { "chuva", NULL, false, true, "chuva de letras", "chuva", "Abre uma janela com letras verdes caindo. Espaço pausa; Esc fecha." },

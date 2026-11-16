@@ -104,6 +104,9 @@ CC_INC := userland/inc/sagui.h userland/inc/gui.h userland/inc/http.h kernel/inc
 # que os testes também compilam no computador de desenvolvimento.
 JOGOS := $(notdir $(wildcard userland/jogos/*))
 PROGRAMAS += $(addprefix $(B)/userland/bin/,$(JOGOS))
+# O visor de JClic usa o DEFLATE e as imagens (PNG, JPEG) do Cipó.
+JOGO_EXTRA_jclic := $(B)/nav/userland/navegador/descompactar.o $(B)/nav/userland/navegador/png.o $(B)/nav/userland/navegador/jpeg.o
+JCLIC_EXEMPLO := $(wildcard userland/jogos/jclic/exemplo/*)
 PROG_TESTE := $(patsubst userland/testes/%.c,$(B)/userland/testes/%,$(wildcard userland/testes/*.c))
 
 .PHONY: all vazio vdi test rodar run entrega limpar dashboard
@@ -288,10 +291,12 @@ $(B)/userland/testes/%: $(B)/userland/testes/%.o $(LIBSAGUI_OBJ) userland/progra
 # ---------- ramdisk (SGFS) ----------
 # O ramdisk é montado a partir de uma cópia do rootfs/ com os programas em
 # /bin e os programas de teste em /testes.
-$(B)/ramdisk.sgfs: $(ROOTFS) $(PROGRAMAS) $(PROG_TESTE) $(CC_LIB) $(CC_INC) docs/c-do-sagui.md tools/mksgfs.py $(B)/host/chip8asm
+$(B)/ramdisk.sgfs: $(ROOTFS) $(PROGRAMAS) $(PROG_TESTE) $(CC_LIB) $(CC_INC) docs/c-do-sagui.md tools/mksgfs.py $(B)/host/chip8asm $(JCLIC_EXEMPLO) tools/mkzip.py
 	rm -rf $(B)/rootfs
 	cp -r rootfs $(B)/rootfs
 	for f in rootfs/jogos/chip8/*.asm; do $(B)/host/chip8asm $$f $(B)/rootfs/jogos/chip8/$$(basename $$f .asm).ch8 || exit 1; done
+	mkdir -p $(B)/rootfs/jogos/jclic
+	$(PY) tools/mkzip.py $(B)/rootfs/jogos/jclic/sagui.jclic.zip $(JCLIC_EXEMPLO)
 	$(if $(PROGRAMAS),cp $(PROGRAMAS) $(B)/rootfs/bin/)
 	$(if $(PROG_TESTE),mkdir -p $(B)/rootfs/testes && cp $(PROG_TESTE) $(B)/rootfs/testes/)
 	mkdir -p $(B)/rootfs/sistema/lib $(B)/rootfs/sistema/inc $(B)/rootfs/sistema/ajuda
