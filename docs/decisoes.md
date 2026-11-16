@@ -1668,7 +1668,7 @@ janela estiver aberta, e a janela avisa. O gasto total de todas as conversas
 fica nas configurações (`saguicode.gasto_total`, em milionésimos de dólar).
 A chave continua só em `chaves.txt`.
 
-## D051. Compactação na libsagui: DEFLATE próprio, gzip, tar e zip (H93)
+## D052. Compactação na libsagui: DEFLATE próprio, gzip, tar e zip (H93)
 
 O SaguiOS ganhou `gzip`/`gunzip`, `tar` e `zip`/`unzip` (apelidos
 `compactar`, `descompactar`, `empacotar`, `zipar` e `deszipar`), ideia trazida
